@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AEKI - Cerita Kopi (Final)</title>
+
+  <!-- Tailwind + Font -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <!-- QR library (keperluan pageDetail) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/2935/2935853.png">
+  <style>
+    :root{
+      --coffee-800:#3b2f2f;
+      --coffee-700:#5a403a;
+      --coffee-600:#8b5e4f;
+      --coffee-500:#c99a6b;
+      --coffee-300:#f3e7dc;
+    }
+    body { font-family: 'Poppins', sans-serif; }
+    .fade-enter { opacity: 0; transform: translateY(6px); }
+    .fade-enter-active { opacity: 1; transform: translateY(0); transition: all 260ms ease-out; }
+    .fade-leave { opacity: 1; transform: translateY(0); }
+    .fade-leave-active { opacity: 0; transform: translateY(-6px); transition: all 180ms ease-in; }
+    .hidden { display: none; }
+
+    /* Detail Premium (full) */
+    .detail-premium {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(19,17,16,0.95), rgba(19,17,16,0.95));
+      z-index: 80;
+      overflow-y: auto;
+      padding: 40px 20px;
+      color: #f8f5f1;
+      -webkit-backdrop-filter: blur(6px);
+      backdrop-filter: blur(6px);
+    }
+    .container-prem {
+      max-width: 1100px;
+      margin: 0 auto;
+      background: linear-gradient(180deg, rgba(255,249,241,0.02), rgba(255,249,241,0.03));
+      border-radius: 14px;
+      padding: 22px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+    }
+    .back-prem{
+      position: sticky; top: 16px; left: 0;
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.12);
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 8px;
+      backdrop-filter: blur(4px);
+      cursor: pointer;
+    }
+    .hero{ display:flex; gap:20px; align-items:center; margin-top:14px; }
+    .img-hero { width:360px; height:260px; object-fit:cover; border-radius:12px; box-shadow: 0 8px 20px rgba(0,0,0,0.6); }
+    .badge { background: linear-gradient(90deg,var(--coffee-700),var(--coffee-600)); padding:6px 10px; border-radius:999px; display:inline-block; font-size:13px; color:#fff; margin-bottom:8px; }
+    .pm-title { font-size:26px; margin:0 0 6px 0; color:#fff; }
+    .sub { color: rgba(255,255,255,0.78); margin-bottom:10px; }
+    .meta-row { display:flex; gap:10px; flex-wrap:wrap; margin-top:8px; }
+    .pill { background: rgba(255,255,255,0.06); padding:6px 10px; border-radius:999px; color:#fff; font-size:13px; }
+
+    .grid-prem { display:grid; grid-template-columns: 1fr 360px; gap:18px; margin-top:20px; }
+    .card-prem { background: rgba(255,255,255,0.03); padding:16px; border-radius:10px; color:rgba(255,255,255,0.95); }
+    .muted { color: rgba(255,255,255,0.75); }
+
+    .taste-list { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+    .taste-pill { background: rgba(255,255,255,0.06); padding:8px 10px; border-radius:999px; color:#fff; font-size:13px; }
+
+    /* small responsive */
+    @media (max-width: 900px){
+      .hero { flex-direction: column; align-items:flex-start; }
+      .img-hero { width:100%; height:220px; }
+      .grid-prem { display:block; }
+    }
+
+    /* Small chart container */
+    .charts { display:flex; gap:10px; align-items:flex-start; }
+    .chart-box { background: rgba(255,255,255,0.02); padding:8px; border-radius:10px; width:220px; height:200px; display:flex; align-items:center; justify-content:center; }
+
+    /* Aside cards */
+    aside .card { background: rgba(255,255,255,0.03); padding:12px; border-radius:10px; color:rgba(255,255,255,0.95); margin-bottom:12px; }
+
+    /* make export buttons visible on dark */
+    .admin-action { display:flex; gap:8px; }
+
+  </style>
+</head>
+<body class="bg-stone-50 text-stone-800">
+
+  <!-- NAVBAR (tidak diubah) -->
+  <nav id="mainNav" class="bg-stone-900 text-white px-6 py-4 flex justify-between items-center shadow-lg sticky top-0 z-50">
+    <h1 class="text-2xl font-bold tracking-wide">AEKI <span class="text-amber-400">Cerita Kopi</span></h1>
+    <div class="space-x-6 text-sm md:text-base">
+      <a href="#home" id="navLinkHome" class="hover:text-amber-300">Beranda</a>
+      <a href="#produk" id="navLinkProduk" class="hover:text-amber-300">Produk</a>
+      <a href="#tentang" id="navLinkTentang" class="hover:text-amber-300">Tentang</a>
+      <button id="loginBtn" class="bg-amber-500 hover:bg-amber-600 px-3 py-1 rounded text-sm">Login</button>
+    </div>
+  </nav>
+
+  <!-- HERO (BERANDA) -->
+  <section id="home" class="relative bg-cover bg-center h-[100vh]" style="background-image: url('https://images.unsplash.com/photo-1509042239860-f550ce710b93');">
+    <div class="absolute inset-0 bg-black/40 flex items-center justify-center text-center">
+      <div>
+        <h2 class="text-4xl md:text-5xl font-bold text-white mb-4 drop-shadow-lg">Cerita di Setiap Cangkir</h2>
+        <p class="text-stone-200 text-lg mb-6">Temukan beragam kopi nusantara pilihan dari AEKI.</p>
+        <a href="#produk" id="btnLihatProduk" class="bg-amber-500 hover:bg-amber-600 text-white px-6 py-3 rounded-full text-lg transition">Lihat Produk</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRODUK SECTION (BERANDA) -->
+  <section id="produk" class="py-20 px-6 md:px-16 bg-white">
+    <div class="max-w-6xl mx-auto">
+      <h2 class="text-4xl font-bold text-center mb-6">Daftar Produk Kopi</h2>
+
+      <!-- Controls: search + filters (pengunjung) -->
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
+        <input id="searchPublic" type="text" placeholder="Cari nama / asal / jenis..." class="border px-3 py-2 rounded w-full md:w-1/3">
+        <div class="flex gap-3">
+          <select id="filterKategoriPublic" class="border px-3 py-2 rounded">
+            <option value="">Semua Kategori</option>
+            <option>Green Bean</option>
+            <option>Roasting</option>
+            <option>Coffee Powder</option>
+          </select>
+          <select id="filterJenisPublic" class="border px-3 py-2 rounded">
+            <option value="">Semua Jenis</option>
+            <option>Arabica</option>
+            <option>Robusta</option>
+          </select>
+          <select id="filterGradePublic" class="border px-3 py-2 rounded">
+            <option value="">Semua Grade</option>
+            <option>Specialty</option>
+            <option>Premium</option>
+            <option>Commercial</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- LIST PRODUK (PUBLIC) -->
+      <div id="produkList" class="grid grid-cols-1 md:grid-cols-4 gap-8 transition-all"></div>
+
+      <!-- DETAIL PRODUK (menggantikan daftar saat dibuka) -->
+      <div id="detailView" class="hidden mt-8 bg-white rounded-2xl shadow p-2 transition-all">
+        <button id="backToList" class="bg-amber-600 text-white px-4 py-2 rounded hover:bg-amber-700 mb-2">← Kembali ke Daftar Produk</button>
+        <div id="detailContent"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TENTANG -->
+  <section id="tentang" class="py-16 px-6 md:px-16 bg-stone-100 text-center">
+    <h2 class="text-3xl font-bold mb-4">Tentang AEKI - Cerita Kopi</h2>
+    <p class="max-w-2xl mx-auto text-stone-700 leading-relaxed">
+      AEKI - Cerita Kopi adalah inisiatif dari Asosiasi Eksportir Kopi Indonesia untuk memperkenalkan
+      kekayaan cita rasa kopi nusantara. Kami percaya setiap biji kopi punya kisah, dari petani hingga cangkir Anda.
+    </p>
+  </section>
+
+  <footer class="bg-stone-900 text-stone-300 text-center py-6 text-sm">
+    © 2025 AEKI - Cerita Kopi. Semua hak dilindungi.
+  </footer>
+
+  <!-- LOGIN MODAL -->
+  <div id="loginModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+    <div class="bg-white p-8 rounded-xl w-96 text-center shadow-lg">
+      <h3 class="text-xl font-bold mb-4">Login Admin</h3>
+      <input id="username" type="text" placeholder="Username" class="border px-3 py-2 rounded w-full mb-3" />
+      <input id="password" type="password" placeholder="Password" class="border px-3 py-2 rounded w-full mb-3" />
+      <div class="flex justify-center space-x-3 mt-4">
+        <button id="loginSubmit" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded">Login</button>
+        <button id="cancelLogin" class="bg-stone-400 hover:bg-stone-500 text-white px-4 py-2 rounded">Batal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden logoutBtn (keperluan script1, tidak menampilkan UI baru) -->
+  <button id="logoutBtn" class="hidden" aria-hidden="true"></button>
+
+  <!-- ADMIN PANEL (dalam satu halaman) -->
+  <div id="adminPanel" class="hidden p-8 bg-stone-100 min-h-screen">
+    <div class="max-w-6xl mx-auto">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-3xl font-bold">Panel Admin - Kelola Produk</h2>
+        <div class="space-x-3">
+          <button id="homeBtn" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded">🏠 Beranda</button>
+          <button id="exportJsonBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">📦 Export JSON</button>
+          <button id="exportCsvBtn" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded">📄 Export CSV</button>
+          <button id="logoutAdminBtn" class="bg-stone-800 hover:bg-stone-900 text-white px-4 py-2 rounded">Logout</button>
+        </div>
+      </div>
+
+      <!-- Admin controls: search + filter -->
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
+        <input id="searchAdmin" type="text" placeholder="Cari (nama / asal / jenis)..." class="border px-3 py-2 rounded w-full md:w-1/3">
+        <div class="flex gap-3">
+          <select id="filterKategoriAdmin" class="border px-3 py-2 rounded">
+            <option value="">Semua Kategori</option>
+            <option>Green Bean</option>
+            <option>Roasting</option>
+            <option>Coffee Powder</option>
+          </select>
+          <select id="filterJenisAdmin" class="border px-3 py-2 rounded">
+            <option value="">Semua Jenis</option>
+            <option>Arabica</option>
+            <option>Robusta</option>
+          </select>
+          <select id="filterGradeAdmin" class="border px-3 py-2 rounded">
+            <option value="">Semua Grade</option>
+            <option>Specialty</option>
+            <option>Premium</option>
+            <option>Commercial</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- FORM TAMBAH / EDIT -->
+      <div class="bg-white p-6 rounded-xl shadow mb-8">
+        <h3 id="formTitle" class="text-lg font-semibold mb-4">Tambah Produk Baru</h3>
+        <div class="grid md:grid-cols-2 gap-4">
+          <select id="newKategori" class="border px-3 py-2 rounded md:col-span-2">
+            <option value="">Pilih Kategori</option>
+            <option>Green Bean</option>
+            <option>Roasting</option>
+            <option>Coffee Powder</option>
+          </select>
+
+          <input id="newNama" type="text" placeholder="Nama Produk *" class="border px-3 py-2 rounded">
+          <input id="newJenis" type="text" placeholder="Jenis Kopi *" class="border px-3 py-2 rounded">
+
+          <input id="newAsal" type="text" placeholder="Asal Daerah *" class="border px-3 py-2 rounded">
+          <input id="newHarga" type="number" placeholder="Harga (Rp) *" class="border px-3 py-2 rounded">
+
+          <input id="newAroma" type="text" placeholder="Karakteristik Aroma" class="border px-3 py-2 rounded">
+          <input id="newRasa" type="text" placeholder="Karakteristik Rasa" class="border px-3 py-2 rounded">
+
+          <input id="newKeasaman" list="keasamanList" placeholder="Tingkat Keasaman" class="border px-3 py-2 rounded">
+          <datalist id="keasamanList">
+            <option>Rendah</option><option>Sedang</option><option>Tinggi</option>
+          </datalist>
+          <input id="newBody" type="text" placeholder="Body" class="border px-3 py-2 rounded">
+
+          <input id="newGrade" list="gradeList" placeholder="Grade" class="border px-3 py-2 rounded">
+          <datalist id="gradeList">
+            <option>Specialty</option><option>Premium</option><option>Commercial</option>
+          </datalist>
+
+          <input id="newKadarAir" type="text" placeholder="Kadar Air (%)" class="border px-3 py-2 rounded">
+          <input id="newDefect" type="text" placeholder="Defect Value" class="border px-3 py-2 rounded">
+          <input id="newScreen" type="text" placeholder="Screen Size" class="border px-3 py-2 rounded">
+
+          <textarea id="newDeskripsi" rows="3" placeholder="Deskripsi Produk *" class="border px-3 py-2 rounded md:col-span-2"></textarea>
+
+          <div class="md:col-span-2">
+            <input id="newGambarFile" type="file" accept="image/*" class="border px-3 py-2 rounded w-full">
+            <img id="previewGambar" class="mt-3 h-40 object-cover rounded hidden" alt="preview gambar"/>
+          </div>
+        </div>
+
+        <div class="flex gap-3 mt-4">
+          <button id="addProduk" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded">Tambah Produk</button>
+          <button id="resetForm" class="bg-stone-400 hover:bg-stone-500 text-white px-4 py-2 rounded">Reset</button>
+        </div>
+      </div>
+
+      <!-- LIST PRODUK (ADMIN) -->
+      <div id="adminProdukList" class="grid grid-cols-1 md:grid-cols-3 gap-8"></div>
+    </div>
+  </div>
+
+  <!-- ===== Halaman Detail Premium (disembunyikan default) ===== -->
+  <div class="detail-premium hidden" id="pageDetail" aria-hidden="true">
+    <div class="container-prem">
+      <button class="back-prem" id="btnKembali">← Kembali ke Daftar Produk</button>
+
+      <header class="hero">
+        <img id="detailImgHero" class="img-hero" src="" alt="Gambar Produk">
+        <div>
+          <div class="badge" id="detailBadge">Single Origin • Arabica</div>
+          <h1 class="pm-title" id="detailNama">Nama Produk</h1>
+          <div class="sub" id="detailSub">Subjudul / ringkasan singkat</div>
+
+          <div class="meta-row">
+            <div class="pill" id="pillAsal"></div>
+            <div class="pill" id="pillHarga"></div>
+            <div class="pill" id="pillJenis"></div>
+          </div>
+        </div>
+      </header>
+
+      <div class="grid-prem" style="margin-top:18px;">
+        <main>
+          <section class="card-prem">
+            <h3 class="text-lg font-semibold">Profil Rasa & Visualisasi</h3>
+            <div style="display:flex;gap:16px;margin-top:12px;align-items:flex-start;flex-wrap:wrap;">
+              <div style="flex:1;min-width:260px;">
+                <p class="muted">Grafik radar menunjukkan intensitas profil rasa (Aroma, Acidity, Body, Sweetness, Aftertaste).</p>
+                <div class="charts" style="margin-top:12px;">
+                  <div class="chart-box">
+                    <canvas id="radarTaste" width="220" height="180"></canvas>
+                  </div>
+                  <div class="chart-box">
+                    <canvas id="barRoast" width="220" height="180"></canvas>
+                  </div>
+                </div>
+
+                <h4 style="margin-top:14px">Ciri-ciri Rasa</h4>
+                <div class="taste-list" id="tastePills"></div>
+              </div>
+
+              <div style="width:240px;">
+                <h4>Ringkasan Cepat</h4>
+                <div style="background:rgba(255,255,255,0.02);padding:10px;border-radius:8px;margin-top:8px;">
+                  <dl style="color:rgba(255,255,255,0.95);">
+                    <dt style="font-size:13px;color:rgba(255,255,255,0.75)">Nama</dt><dd id="asideNama">—</dd>
+                    <dt style="font-size:13px;color:rgba(255,255,255,0.75)">Asal</dt><dd id="asideAsal">—</dd>
+                    <dt style="font-size:13px;color:rgba(255,255,255,0.75)">Harga/kg</dt><dd id="asideHarga">—</dd>
+                  </dl>
+
+                  <div id="qrContainer" style="margin-top:12px;text-align:center;"></div>
+                </div>
+              </div>
+            </div>
+
+            <hr style="opacity:0.06;margin:14px 0">
+
+            <h3 class="text-lg font-semibold">Deskripsi</h3>
+            <p id="detailRingkasan" class="muted" style="margin-top:8px;">Deskripsi tentang produk — diisi dari form.</p>
+
+            <div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-top:12px">
+              <div style="flex:1;min-width:240px">
+                <h3>Spesifikasi</h3>
+                <dl id="dlQuality" style="color:rgba(255,255,255,0.9);">
+                  <dt style="font-size:13px;color:rgba(255,255,255,0.75)">Grade</dt><dd id="dlGrade">—</dd>
+                  <dt style="font-size:13px;color:rgba(255,255,255,0.75)">Kadar Air (Moisture)</dt><dd id="dlMoisture">—</dd>
+                  <dt style="font-size:13px;color:rgba(255,255,255,0.75)">Defects</dt><dd id="dlDefect">—</dd>
+                  <dt style="font-size:13px;color:rgba(255,255,255,0.75)">Ukuran (Screen Size)</dt><dd id="dlScreen">—</dd>
+                </dl>
+              </div>
+
+              <div style="flex:1;min-width:240px">
+                <h3>Detail Teknis</h3>
+                <dl style="color:rgba(255,255,255,0.9);">
+                  <dt style="font-size:13px;color:rgba(255,255,255,0.75)">Jenis</dt><dd id="dlJenis">—</dd>
+                  <dt style="font-size:13px;color:rgba(255,255,255,0.75)">Kategori</dt><dd id="dlKategori">—</dd>
+                  <dt style="font-size:13px;color:rgba(255,255,255,0.75)">Aroma</dt><dd id="dlAroma">—</dd>
+                </dl>
+              </div>
+            </div>
+
+          </section>
+        </main>
+
+        <aside>
+          <div class="card-prem">
+            <h3 class="text-lg font-semibold">Keyword & Tag</h3>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px" id="tagList"></div>
+          </div>
+
+          <div class="card-prem" style="margin-top:12px">
+            <h3 class="text-lg font-semibold">Kontak / Tautan</h3>
+            <div style="margin-top:8px;color:rgba(255,255,255,0.9)">
+              <p class="muted">Gunakan tombol share di halaman produk (public) untuk menyalin link.</p>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPT (keep script1 functionality + new pageDetail logic) -->
+  <script>
+    // ---------------------------
+    // Data awal / localStorage  (script1 - preserved)
+    // ---------------------------
+    const defaultData = [
+      {
+        nama: "Kopi Arabica Gayo",
+        jenis: "Arabica",
+        asal: "Aceh Tengah",
+        harga: "120000",
+        aroma: "Fruity",
+        rasa: "Seimbang",
+        keasaman: "Medium",
+        body: "Full",
+        grade: "Specialty",
+        kadarAir: "12%",
+        defect: "5",
+        screen: "17-18",
+        kategori: "Green Bean",
+        deskripsi: "Rasa fruity dengan keasaman seimbang dan aroma khas.",
+        gambar: "https://images.unsplash.com/photo-1510626176961-4b57d4fbad03"
+      },
+      {
+        nama: "Kopi Toraja Kalosi",
+        jenis: "Arabica",
+        asal: "Sulawesi Selatan",
+        harga: "110000",
+        aroma: "Cokelat",
+        rasa: "Manis dan kompleks",
+        keasaman: "Low",
+        body: "Full",
+        grade: "Premium",
+        kadarAir: "11%",
+        defect: "3",
+        screen: "18",
+        kategori: "Roasting",
+        deskripsi: "Body penuh dengan aftertaste manis seperti cokelat.",
+        gambar: "https://images.unsplash.com/photo-1459755486867-b55449bb39ff"
+      },
+      {
+        nama: "Kopi Kintamani",
+        jenis: "Arabica",
+        asal: "Bali",
+        harga: "95000",
+        aroma: "Citrus",
+        rasa: "Segar",
+        keasaman: "Tinggi",
+        body: "Light",
+        grade: "Specialty",
+        kadarAir: "12%",
+        defect: "4",
+        screen: "17",
+        kategori: "Green Bean",
+        deskripsi: "Cita rasa citrus segar dengan keasaman tinggi yang menyenangkan.",
+        gambar: "https://images.unsplash.com/photo-1511537190424-bbbab87ac5eb"
+      }
+    ];
+
+    if (!localStorage.getItem("produkData")) {
+      localStorage.setItem("produkData", JSON.stringify(defaultData));
+    }
+
+    // ---------------------------
+    // Elemen DOM (script1 - preserved)
+    // ---------------------------
+    // Public
+    const searchPublic = document.getElementById("searchPublic");
+    const filterJenisPublic = document.getElementById("filterJenisPublic");
+    const filterGradePublic = document.getElementById("filterGradePublic");
+    const filterKategoriPublic = document.getElementById("filterKategoriPublic");
+    const produkList = document.getElementById("produkList");
+    const detailView = document.getElementById("detailView");
+    const detailContent = document.getElementById("detailContent");
+    const backToList = document.getElementById("backToList");
+
+    // Admin modal / panel
+    const loginBtn = document.getElementById("loginBtn");
+    const loginModal = document.getElementById("loginModal");
+    const cancelLogin = document.getElementById("cancelLogin");
+    const loginSubmit = document.getElementById("loginSubmit");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    const adminPanel = document.getElementById("adminPanel");
+    const homeBtn = document.getElementById("homeBtn");
+    const exportJsonBtn = document.getElementById("exportJsonBtn");
+    const exportCsvBtn = document.getElementById("exportCsvBtn");
+    const logoutAdminBtn = document.getElementById("logoutAdminBtn");
+
+    const searchAdmin = document.getElementById("searchAdmin");
+    const filterJenisAdmin = document.getElementById("filterJenisAdmin");
+    const filterGradeAdmin = document.getElementById("filterGradeAdmin");
+    const filterKategoriAdmin = document.getElementById("filterKategoriAdmin");
+    const adminProdukList = document.getElementById("adminProdukList");
+
+    // form elements
+    const formTitle = document.getElementById("formTitle");
+    const newNama = document.getElementById("newNama");
+    const newJenis = document.getElementById("newJenis");
+    const newAsal = document.getElementById("newAsal");
+    const newHarga = document.getElementById("newHarga");
+    const newAroma = document.getElementById("newAroma");
+    const newRasa = document.getElementById("newRasa");
+    const newKeasaman = document.getElementById("newKeasaman");
+    const newBody = document.getElementById("newBody");
+    const newGrade = document.getElementById("newGrade");
+    const newKadarAir = document.getElementById("newKadarAir");
+    const newDefect = document.getElementById("newDefect");
+    const newScreen = document.getElementById("newScreen");
+    const newKategori = document.getElementById("newKategori");
+    const newDeskripsi = document.getElementById("newDeskripsi");
+    const newGambarFile = document.getElementById("newGambarFile");
+    const previewGambar = document.getElementById("previewGambar");
+    const addProduk = document.getElementById("addProduk");
+    const resetForm = document.getElementById("resetForm");
+
+    // navbar links
+    const navLinkHome = document.getElementById("navLinkHome");
+    const navLinkProduk = document.getElementById("navLinkProduk");
+    const navLinkTentang = document.getElementById("navLinkTentang");
+    const btnLihatProduk = document.getElementById("btnLihatProduk");
+
+    // ---------------------------
+    // Helper: simpan ke localStorage
+    // ---------------------------
+    function saveData() {
+      localStorage.setItem("produkData", JSON.stringify(produkData));
+    }
+
+    // ---------------------------
+    // Data variable
+    // ---------------------------
+    let produkData = JSON.parse(localStorage.getItem("produkData")) || [];
+    let editIndex = null;
+    let uploadedImage = ""; // dataURL preview saat upload
+
+    // ---------------------------
+    // Utility: matching filters/search
+    // ---------------------------
+    function matchesFilter(item, q, jenis, grade, kategori) {
+      const qLow = q.trim().toLowerCase();
+      const matchesQ = !qLow || (
+        (item.nama || "").toLowerCase().includes(qLow) ||
+        (item.asal || "").toLowerCase().includes(qLow) ||
+        (item.jenis || "").toLowerCase().includes(qLow)
+      );
+      const matchesJenis = !jenis || (item.jenis === jenis);
+      const matchesGrade = !grade || (item.grade === grade);
+      const matchesKategori = !kategori || (item.kategori === kategori);
+      return matchesQ && matchesJenis && matchesGrade && matchesKategori;
+    }
+
+    // ---------------------------
+    // Render PUBLIC (beranda) (script1 - preserved)
+    // ---------------------------
+    function renderProdukPublic() {
+      produkData = JSON.parse(localStorage.getItem("produkData")) || [];
+      const q = searchPublic.value || "";
+      const jenis = filterJenisPublic.value;
+      const grade = filterGradePublic.value;
+      const kategori = filterKategoriPublic.value;
+      produkList.innerHTML = "";
+      const filtered = produkData.filter(p => matchesFilter(p, q, jenis, grade, kategori));
+      if (filtered.length === 0) {
+        produkList.innerHTML = `<p class="text-center col-span-3 text-stone-500">Tidak ada produk ditemukan.</p>`;
+        return;
+      }
+      filtered.forEach((kopi) => {
+        const index = produkData.indexOf(kopi);
+
+        // create button-card so it's keyboard accessible and clearly clickable
+        const cardBtn = document.createElement('button');
+        cardBtn.className = "bg-stone-50 shadow-md rounded-2xl overflow-hidden hover:shadow-xl transition hover:-translate-y-1 cursor-pointer text-left";
+        cardBtn.setAttribute('type','button');
+        cardBtn.innerHTML = `
+          <img src="${kopi.gambar || 'https://via.placeholder.com/600x400?text=No+Image'}" alt="${kopi.nama}" class="h-52 w-full object-cover">
+          <div class="p-5">
+            <h3 class="text-xl font-semibold mb-1">${kopi.nama}</h3>
+            <p class="text-sm text-stone-500 mb-1">Grade: ${kopi.grade || '-'}</p>
+            <p class="text-sm text-stone-500 mb-1">Kategori: ${kopi.kategori || '-'}</p>
+            <p class="text-stone-700 text-sm">${(kopi.deskripsi || '').slice(0, 160)}${(kopi.deskripsi || '').length>160? '...':''}</p>
+          </div>`;
+
+        // When clicked, open the premium detail full-page (SPA) - uses the same data source
+        cardBtn.addEventListener('click', () => openPremiumDetail(index));
+        produkList.appendChild(cardBtn);
+      });
+    }
+
+    // ---------------------------
+    // ORIGINAL openDetail (kept, not removed) - still used for small detailView if needed
+    // ---------------------------
+    function openDetail(index, clickedEl) {
+      produkData = JSON.parse(localStorage.getItem("produkData")) || [];
+      const p = produkData[index];
+      if (!p) return alert("Produk tidak ditemukan.");
+      // animasi: hide list, show detail
+      produkList.classList.add('hidden');
+      detailView.classList.remove('hidden');
+
+      const adminLogin = localStorage.getItem("isAdminLogin") === "true";
+      detailContent.innerHTML = `
+        <div class="grid md:grid-cols-2 gap-6">
+          <div>
+            <img src="${p.gambar || 'https://via.placeholder.com/800x400?text=No+Image'}" alt="${p.nama}" class="w-80 h-80 object-cover rounded-lg mb-4">
+            <div class="text-sm text-stone-600">
+              <p><strong>Aroma:</strong> ${p.aroma || '-'}</p>
+              <p><strong>Rasa:</strong> ${p.rasa || '-'}</p>
+              <p><strong>Keasaman:</strong> ${p.keasaman || '-'}</p>
+              <p><strong>Body:</strong> ${p.body || '-'}</p>
+            </div>
+          </div>
+          <div>
+            <h1 class="text-2xl font-bold mb-2">${p.nama}</h1>
+            <p class="text-stone-600 mb-4">${p.deskripsi || '-'}</p>
+
+            <div class="grid grid-cols-2 gap-2 text-sm mb-4">
+              <p><strong>Asal:</strong> ${p.asal || '-'}</p>
+              <p><strong>Jenis:</strong> ${p.jenis || '-'}</p>
+              <p><strong>Grade:</strong> ${p.grade || '-'}</p>
+              <p><strong>Kategori:</strong> ${p.kategori || '-'}</p>
+              <p><strong>Harga:</strong> ${p.harga ? 'Rp' + p.harga : '-'}</p>
+              <p><strong>Kadar Air:</strong> ${p.kadarAir || '-'}</p>
+              <p><strong>Defect Value:</strong> ${p.defect || '-'}</p>
+              <p><strong>Screen Size:</strong> ${p.screen || '-'}</p>
+            </div>
+
+            <div class="flex gap-3">
+              ${ adminLogin ? `<button id="editFromDetail" class="bg-amber-600 text-white px-4 py-2 rounded hover:bg-amber-700">✏️ Edit Produk Ini</button>` : '' }
+              <button id="shareBtn" class="bg-stone-200 px-4 py-2 rounded">🔗 Salin Link</button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // attach edit handler if admin
+      if (adminLogin) {
+        document.getElementById('editFromDetail').addEventListener('click', () => {
+          // buka admin panel dan isi form
+          openAdminPanel();
+          // set editIndex and fill form
+          editIndex = index;
+          formTitle.textContent = "Edit Produk";
+          addProduk.textContent = "Simpan Perubahan";
+          const pData = produkData[index];
+          newNama.value = pData.nama || '';
+          newJenis.value = pData.jenis || '';
+          newAsal.value = pData.asal || '';
+          newHarga.value = pData.harga || '';
+          newAroma.value = pData.aroma || '';
+          newRasa.value = pData.rasa || '';
+          newKeasaman.value = pData.keasaman || '';
+          newBody.value = pData.body || '';
+          newGrade.value = pData.grade || '';
+          newKadarAir.value = pData.kadarAir || '';
+          newDefect.value = pData.defect || '';
+          newScreen.value = pData.screen || '';
+          newKategori.value = pData.kategori || '';
+          newDeskripsi.value = pData.deskripsi || '';
+          uploadedImage = pData.gambar || '';
+          if (uploadedImage) {
+            previewGambar.src = uploadedImage;
+            previewGambar.classList.remove('hidden');
+          } else {
+            previewGambar.classList.add('hidden');
+          }
+        });
+      }
+
+      document.getElementById('shareBtn').addEventListener('click', () => {
+        // buat URL dengan query param index (local approach)
+        const url = new URL(window.location.href);
+        url.hash = `detail=${index}`;
+        navigator.clipboard && navigator.clipboard.writeText(url.toString());
+        alert("Link detail produk disalin ke clipboard.");
+      });
+
+      // update URL hash untuk share / cara kembali langsung
+      window.location.hash = `detail=${index}`;
+    }
+
+    // ---------------------------
+    // NEW: openPremiumDetail (uses same produkData) - SPA full page
+    // ---------------------------
+    const pageDetail = document.getElementById('pageDetail');
+    const btnKembali = document.getElementById('btnKembali');
+
+    let radarChart = null;
+    let barChart = null;
+
+    function openPremiumDetail(index) {
+      produkData = JSON.parse(localStorage.getItem("produkData")) || [];
+      const p = produkData[index];
+      if (!p) return alert("Produk tidak ditemukan.");
+
+      // populate hero
+      document.getElementById('detailImgHero').src = p.gambar || '';
+      document.getElementById('detailBadge').textContent = `${p.kategori || 'Produk'} • ${p.jenis || '-'}`;
+      document.getElementById('detailNama').textContent = p.nama || '-';
+      document.getElementById('detailSub').textContent = (p.rasa ? p.rasa + ' • ' : '') + (p.aroma ? p.aroma : '');
+      document.getElementById('pillAsal').textContent = p.asal || '-';
+      document.getElementById('pillHarga').textContent = p.harga ? 'Rp ' + p.harga : '-';
+      document.getElementById('pillJenis').textContent = p.jenis || '-';
+
+      // Deskripsi & aside
+      document.getElementById('detailRingkasan').textContent = p.deskripsi || '-';
+      document.getElementById('asideNama').textContent = p.nama || '-';
+      document.getElementById('asideAsal').textContent = p.asal || '-';
+      document.getElementById('asideHarga').textContent = p.harga ? 'Rp ' + p.harga : '-';
+
+      // Specs
+      document.getElementById('dlGrade').textContent = p.grade || '-';
+      document.getElementById('dlMoisture').textContent = p.kadarAir || '-';
+      document.getElementById('dlDefect').textContent = p.defect || '-';
+      document.getElementById('dlScreen').textContent = p.screen || '-';
+      document.getElementById('dlJenis').textContent = p.jenis || '-';
+      document.getElementById('dlKategori').textContent = p.kategori || '-';
+      document.getElementById('dlAroma').textContent = p.aroma || '-';
+
+      // Taste pills (split rasa string by commas or spaces)
+      const tasteEl = document.getElementById('tastePills');
+      tasteEl.innerHTML = '';
+      const tastes = (p.rasa || '').split(/[,;\/•]/).map(s=>s.trim()).filter(Boolean);
+      if(tastes.length===0 && p.aroma) tastes.push(p.aroma);
+      tastes.forEach(t => {
+        const d = document.createElement('div');
+        d.className = 'taste-pill';
+        d.textContent = t;
+        tasteEl.appendChild(d);
+      });
+
+      // tags keywords (kategori, jenis, grade, aroma)
+      const tagBox = document.getElementById('tagList');
+      tagBox.innerHTML = '';
+      const tags = [p.kategori, p.jenis, p.grade, p.aroma].filter(Boolean);
+      tags.forEach(t => {
+        const el = document.createElement('div');
+        el.style.background = 'rgba(255,255,255,0.04)';
+        el.style.padding = '6px 10px';
+        el.style.borderRadius = '999px';
+        el.style.fontSize = '13px';
+        el.textContent = t;
+        tagBox.appendChild(el);
+      });
+
+      // QR code (simple - encode local link with hash)
+      const qrContainer = document.getElementById('qrContainer');
+      qrContainer.innerHTML = '';
+      try {
+        const qrcode = new QRCode(qrContainer, {
+          text: window.location.origin + window.location.pathname + '#detail=' + index,
+          width: 120,
+          height: 120
+        });
+      } catch(e){ /* ignore qr errors */ }
+
+      // Chart data (build from fields - since original data doesn't have numeric arrays for taste,
+      // we derive approximate numeric profile from keasaman/body/grade/aroma heuristics)
+      const radarCtx = document.getElementById('radarTaste').getContext('2d');
+      const barCtx = document.getElementById('barRoast').getContext('2d');
+
+      // compute approximate profile (0-10)
+      const getScore = (key) => {
+        const v = (p[key] || '').toString().toLowerCase();
+        if(!v) return 5;
+        if(key === 'keasaman'){
+          if(v.includes('low') || v.includes('rendah')) return 3;
+          if(v.includes('high') || v.includes('tinggi')) return 8;
+          if(v.includes('medium') || v.includes('sedang')|| v.includes('medium')) return 6;
+          return 5;
+        }
+        if(key === 'body'){
+          if(v.includes('full')) return 8;
+          if(v.includes('light')) return 4;
+          return 6;
+        }
+        if(key === 'grade'){
+          if(v.toLowerCase().includes('special')) return 9;
+          if(v.toLowerCase().includes('premium')) return 7;
+          return 5;
+        }
+        return 5;
+      };
+
+      const aromaScore = 7; // generic
+      const acidityScore = getScore('keasaman');
+      const bodyScore = getScore('body');
+      const sweetnessScore = p.rasa && p.rasa.toLowerCase().includes('manis') ? 7 : 4;
+      const aftertasteScore = 6;
+
+      const radarLabels = ['Aroma','Acidity','Body','Sweetness','Aftertaste'];
+      const radarData = [aromaScore, acidityScore, bodyScore, sweetnessScore, aftertasteScore];
+
+      // destroy previous charts if exist
+      if (radarChart) { radarChart.destroy(); radarChart = null; }
+      if (barChart) { barChart.destroy(); barChart = null; }
+
+      radarChart = new Chart(radarCtx, {
+        type: 'radar',
+        data: {
+          labels: radarLabels,
+          datasets: [{
+            label: 'Profil Rasa',
+            data: radarData,
+            borderWidth: 2,
+            borderColor: 'rgba(200,154,107,0.95)',
+            backgroundColor: 'rgba(200,154,107,0.18)',
+            pointBackgroundColor: 'rgba(255,255,255,0.9)'
+          }]
+        },
+        options: {
+          plugins:{ legend:{ display:false } },
+          scales: {
+            r: {
+              suggestedMin: 0,
+              suggestedMax: 10,
+              grid: { color: 'rgba(255,255,255,0.06)' },
+              angleLines: { color: 'rgba(255,255,255,0.04)' },
+              pointLabels: { color: 'rgba(255,255,255,0.8)' },
+              ticks: { display:false }
+            }
+          }
+        }
+      });
+
+      // bar roast placeholder (we do a roast-level indicator)
+      const roastLabels = ['Roast Level'];
+      const roastVal = (p.kategori && p.kategori.toLowerCase().includes('roast')) ? 7 : 4;
+      barChart = new Chart(barCtx, {
+        type: 'bar',
+        data: {
+          labels: roastLabels,
+          datasets: [{
+            label: 'Roast Intensity',
+            data: [roastVal],
+            borderRadius: 6,
+            borderWidth: 0,
+            backgroundColor: ['rgba(139,94,79,0.95)']
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          plugins:{ legend:{ display:false } },
+          scales: {
+            x: { display:false, min:0, max:10 },
+            y: { display:false }
+          }
+        }
+      });
+
+      // hide main list & show pageDetail as SPA full page
+      document.getElementById('mainNav').classList.add('hidden');
+      document.getElementById('home').classList.add('hidden');
+      document.getElementById('produk').classList.add('hidden');
+      document.getElementById('tentang').classList.add('hidden');
+      document.querySelector('footer').classList.add('hidden');
+
+      pageDetail.classList.remove('hidden');
+      pageDetail.setAttribute('aria-hidden','false');
+
+      // update URL hash so linkable
+      window.location.hash = `detail=${index}`;
+    }
+
+    // back from premium detail
+    btnKembali.addEventListener('click', () => {
+      pageDetail.classList.add('hidden');
+      pageDetail.setAttribute('aria-hidden','true');
+      // show main UI
+      document.getElementById('mainNav').classList.remove('hidden');
+      document.getElementById('home').classList.remove('hidden');
+      document.getElementById('produk').classList.remove('hidden');
+      document.getElementById('tentang').classList.remove('hidden');
+      document.querySelector('footer').classList.remove('hidden');
+      // reset hash
+      if (window.location.hash.startsWith('#detail')) history.replaceState(null, '', window.location.pathname + window.location.search);
+      // scroll top
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // ---------------------------
+    // Event: real-time filter (public & admin)
+    // ---------------------------
+    [searchPublic, filterJenisPublic, filterGradePublic, filterKategoriPublic].forEach(el => {
+      el && el.addEventListener('input', renderProdukPublic);
+      el && el.addEventListener('change', renderProdukPublic);
+    });
+
+    // ---------------------------
+    // Initial render
+    // ---------------------------
+    renderProdukPublic();
+
+    // handle URL hash open detail when page loaded with #detail=idx
+    window.addEventListener('load', () => {
+      if (window.location.hash.startsWith('#detail=')) {
+        const idx = parseInt(window.location.hash.split('=')[1]);
+        if (!isNaN(idx)) openPremiumDetail(idx);
+      }
+    });
+
+    // ---------------------------
+    // Login modal logic (script1 - preserved)
+    // ---------------------------
+    loginBtn.onclick = () => loginModal.classList.remove('hidden');
+    cancelLogin.onclick = () => loginModal.classList.add('hidden');
+    loginSubmit.onclick = () => {
+      const user = document.getElementById("username").value.trim();
+      const pass = document.getElementById("password").value.trim();
+      // credential sederhana: admin / 12345
+      if (user === "admin" && pass === "12345") {
+        loginModal.classList.add('hidden');
+        document.getElementById('mainNav').classList.add('hidden'); // sembunyikan nav agar admin panel tampak terpisah
+        document.getElementById('home').classList.add('hidden');
+        document.getElementById('produk').classList.add('hidden');
+        document.getElementById('tentang').classList.add('hidden');
+        document.querySelector('footer').classList.add('hidden');
+        adminPanel.classList.remove('hidden');
+        localStorage.setItem("isAdminLogin", "true");
+        // logoutBtn exists (hidden) - safe to remove class
+        try { logoutBtn.classList.remove('hidden'); } catch(e){}
+        renderProdukAdmin();
+      } else {
+        alert("Username atau password salah!");
+      }
+    };
+
+    // ---------------------------
+    // Upload gambar preview (convert ke dataURL)
+    // ---------------------------
+    newGambarFile.onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        uploadedImage = ev.target.result; // dataURL
+        previewGambar.src = uploadedImage;
+        previewGambar.classList.remove('hidden');
+      };
+      reader.readAsDataURL(file);
+    };
+
+    // ---------------------------
+    // Tambah / Simpan produk (juga update saat edit) (script1 - preserved)
+    // ---------------------------
+    addProduk.onclick = () => {
+      const obj = {
+        nama: newNama.value.trim(),
+        jenis: newJenis.value.trim(),
+        asal: newAsal.value.trim(),
+        harga: newHarga.value.trim(),
+        aroma: newAroma.value.trim(),
+        rasa: newRasa.value.trim(),
+        keasaman: newKeasaman.value.trim(),
+        body: newBody.value.trim(),
+        grade: newGrade.value.trim(),
+        kadarAir: newKadarAir.value.trim(),
+        defect: newDefect.value.trim(),
+        screen: newScreen.value.trim(),
+        kategori: newKategori.value,
+        deskripsi: newDeskripsi.value.trim(),
+        gambar: uploadedImage || ''
+      };
+      // validasi minimal
+      if (!obj.nama || !obj.asal || !obj.jenis || !obj.harga || !obj.deskripsi) {
+        return alert("Lengkapi field wajib: Nama, Asal, Jenis, Harga, Deskripsi.");
+      }
+
+      if (editIndex === null) {
+        produkData.push(obj);
+      } else {
+        produkData[editIndex] = obj;
+        editIndex = null;
+        formTitle.textContent = "Tambah Produk Baru";
+        addProduk.textContent = "Tambah Produk";
+      }
+
+      saveData();
+      renderProdukPublic();
+      renderProdukAdmin();
+      resetFormFields();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // Reset form
+    resetForm.onclick = resetFormFields;
+    function resetFormFields() {
+      formTitle.textContent = "Tambah Produk Baru";
+      addProduk.textContent = "Tambah Produk";
+      editIndex = null;
+      uploadedImage = "";
+      previewGambar.classList.add('hidden');
+      previewGambar.src = '';
+      [newNama, newJenis, newAsal, newHarga, newAroma, newRasa, newKeasaman, newBody, newGrade, newKadarAir, newDefect, newScreen, newKategori, newDeskripsi].forEach(i => {
+        if (i) i.value = '';
+      });
+      newGambarFile.value = '';
+    }
+
+    // ---------------------------
+    // Edit & Hapus fungsi (global supaya dipanggil oleh onclick html) (script1 - preserved)
+    // ---------------------------
+    window.editProduk = (index) => {
+      const p = produkData[index];
+      if (!p) return alert("Produk tidak ditemukan.");
+      editIndex = index;
+      formTitle.textContent = "Edit Produk";
+      addProduk.textContent = "Simpan Perubahan";
+      newNama.value = p.nama || '';
+      newJenis.value = p.jenis || '';
+      newAsal.value = p.asal || '';
+      newHarga.value = p.harga || '';
+      newAroma.value = p.aroma || '';
+      newRasa.value = p.rasa || '';
+      newKeasaman.value = p.keasaman || '';
+      newBody.value = p.body || '';
+      newGrade.value = p.grade || '';
+      newKadarAir.value = p.kadarAir || '';
+      newDefect.value = p.defect || '';
+      newScreen.value = p.screen || '';
+      newKategori.value = p.kategori || '';
+      newDeskripsi.value = p.deskripsi || '';
+      uploadedImage = p.gambar || '';
+      if (uploadedImage) {
+        previewGambar.src = uploadedImage;
+        previewGambar.classList.remove('hidden');
+      } else {
+        previewGambar.classList.add('hidden');
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    window.hapusProduk = (index) => {
+      if (!confirm("Yakin ingin menghapus produk ini?")) return;
+      produkData.splice(index, 1);
+      saveData();
+      renderProdukPublic();
+      renderProdukAdmin();
+    };
+
+    // ---------------------------
+    // Export JSON / CSV (script1 - preserved)
+    // ---------------------------
+    exportJsonBtn.onclick = () => {
+      const blob = new Blob([JSON.stringify(produkData, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'data-produk-kopi.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    };
+
+    function toCsv(arr) {
+      if (!arr.length) return '';
+      const keys = Object.keys(arr[0]);
+      const escape = (v) => {
+        if (v === null || v === undefined) return '';
+        const s = String(v).replace(/"/g, '""');
+        return `"${s}"`;
+      };
+      const header = keys.map(k => escape(k)).join(',');
+      const rows = arr.map(obj => keys.map(k => escape(obj[k])).join(','));
+      return [header].concat(rows).join('\n');
+    }
+
+    exportCsvBtn.onclick = () => {
+      const csv = toCsv(produkData);
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'data-produk-kopi.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    };
+
+    // ---------------------------
+    // Navigasi admin <-> home (script1 - preserved)
+    // ---------------------------
+    homeBtn.onclick = () => {
+      // keluar admin panel dan kembalikan tampilan beranda
+      document.getElementById('mainNav').classList.remove('hidden');
+      document.getElementById('home').classList.remove('hidden');
+      document.getElementById('produk').classList.remove('hidden');
+      document.getElementById('tentang').classList.remove('hidden');
+      document.querySelector('footer').classList.remove('hidden');
+      adminPanel.classList.add('hidden');
+      // set login flag so edit button visible in detail
+      localStorage.setItem("isAdminLogin", "true");
+      renderProdukAdmin();
+      renderProdukPublic();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    logoutAdminBtn.onclick = () => {
+      alert("Anda telah keluar dari panel admin.");
+      localStorage.removeItem("isAdminLogin");
+      // reload agar UI kembali normal
+      window.location.reload();
+    };
+
+    logoutBtn.onclick = () => {
+      localStorage.removeItem("isAdminLogin");
+      logoutBtn.classList.add('hidden');
+      alert("Anda telah logout.");
+      renderProdukPublic();
+    };
+
+    // ---------------------------
+    // Render ADMIN list (script1 - preserved)
+    // ---------------------------
+    function renderProdukAdmin() {
+      produkData = JSON.parse(localStorage.getItem("produkData")) || [];
+      adminProdukList.innerHTML = "";
+      const q = searchAdmin.value || "";
+      const jenis = filterJenisAdmin.value;
+      const grade = filterGradeAdmin.value;
+      const kategori = filterKategoriAdmin.value;
+      const filtered = produkData.filter((p) => matchesFilter(p, q, jenis, grade, kategori));
+      if (filtered.length === 0) {
+        adminProdukList.innerHTML = `<p class="text-center col-span-3 text-stone-500">Tidak ada produk ditemukan.</p>`;
+        return;
+      }
+      filtered.forEach((kopi) => {
+        const index = produkData.indexOf(kopi);
+        adminProdukList.innerHTML += `
+          <div class="bg-white shadow rounded-xl p-4">
+            <img src="${kopi.gambar || 'https://via.placeholder.com/600x400?text=No+Image'}" class="h-40 w-full object-cover rounded mb-3">
+            <h3 class="font-semibold">${kopi.nama}</h3>
+            <p class="text-sm text-stone-500">Asal: ${kopi.asal}</p>
+            <p class="text-sm text-stone-500">Jenis: ${kopi.jenis}</p>
+            <p class="text-sm text-stone-500">Grade: ${kopi.grade}</p>
+            <p class="text-sm text-stone-500">Kategori: ${kopi.kategori}</p>
+            <p class="text-sm text-stone-500">Harga: Rp${kopi.harga || '-'}</p>
+            <div class="flex justify-between mt-3">
+              <button onclick="editProduk(${index})" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">✏️ Edit</button>
+              <button onclick="hapusProduk(${index})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">🗑️ Hapus</button>
+            </div>
+          </div>`;
+      });
+    }
+
+    // ---------------------------
+    // Optional: keyboard shortcuts
+    // ---------------------------
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.key.toLowerCase() === 'f') {
+        e.preventDefault();
+        if (!adminPanel.classList.contains('hidden')) {
+          searchAdmin.focus();
+        } else {
+          searchPublic.focus();
+        }
+      }
+    });
+
+    // ---------------------------
+    // Helpers: open admin panel from detail or other
+    // ---------------------------
+    function openAdminPanel() {
+      document.getElementById('mainNav').classList.add('hidden');
+      document.getElementById('home').classList.add('hidden');
+      document.getElementById('produk').classList.add('hidden');
+      document.getElementById('tentang').classList.add('hidden');
+      document.querySelector('footer').classList.add('hidden');
+      adminPanel.classList.remove('hidden');
+      localStorage.setItem("isAdminLogin", "true");
+      renderProdukAdmin();
+    }
+
+    // Expose openAdminPanel so onclick from detail can call it
+    window.openAdminPanel = openAdminPanel;
+
+    // ---------------------------
+    // Event listeners for admin filter/search
+    // ---------------------------
+    [searchAdmin, filterJenisAdmin, filterGradeAdmin, filterKategoriAdmin].forEach(el => {
+      el && el.addEventListener('input', renderProdukAdmin);
+    });
+
+    // ---------------------------
+    // Navbar / link handlers
+    // ---------------------------
+    navLinkHome.addEventListener('click', (e) => {
+      e.preventDefault();
+      // scroll to home section
+      document.getElementById('home').scrollIntoView({ behavior: 'smooth' });
+    });
+    navLinkProduk.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.getElementById('produk').scrollIntoView({ behavior: 'smooth' });
+    });
+    navLinkTentang.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.getElementById('tentang').scrollIntoView({ behavior: 'smooth' });
+    });
+    btnLihatProduk.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.getElementById('produk').scrollIntoView({ behavior: 'smooth' });
+    });
+
+    // ---------------------------
+    // Inisialisasi terakhir
+    // ---------------------------
+    // render awal public & admin (jika admin login)
+    renderProdukPublic();
+    if (localStorage.getItem("isAdminLogin") === "true") {
+      // langsung buka admin panel if previously logged in
+      // but per UX we show adminPanel only when login pressed originally; we'll show logout button though
+      try { logoutBtn.classList.remove('hidden'); } catch(e){}
+      renderProdukAdmin();
+    }
+
+    // Expose some functions globally (for compatibility)
+    window.openDetail = openDetail;
+    window.editProduk = window.editProduk || function(i){ editProduk(i); };
+    window.hapusProduk = window.hapusProduk || function(i){ hapusProduk(i); };
+    window.openAdminPanel = openAdminPanel;
+
+  </script>
+</body>
+</html>
