@@ -378,11 +378,28 @@
     </div>
   </div>
 
-  <!-- SCRIPT (keep script1 functionality + new pageDetail logic) -->
-  <script>
-    // ---------------------------
-    // Data awal / localStorage  (script1 - preserved)
-    // ---------------------------
+  <!-- ===== SINGLE MODULE SCRIPT: Firebase + App Logic ===== -->
+  <script type="module">
+    // ---------- Firebase config (dari user) ----------
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getDatabase, ref, push, set, onValue, get, child, update, remove } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBKcH2BXe5c3RtieUdM2pZArRs_NiFgXt0",
+      authDomain: "aeki-cerita-kopi.firebaseapp.com",
+      databaseURL: "https://aeki-cerita-kopi-default-rtdb.firebaseio.com",
+      projectId: "aeki-cerita-kopi",
+      storageBucket: "aeki-cerita-kopi.firebasestorage.app",
+      messagingSenderId: "67809009578",
+      appId: "1:67809009578:web:888c79fd360972ee6655d3",
+      measurementId: "G-FGVK46LSSF"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const produkRef = ref(db, 'produk');
+
+    // ---------- Default seed data (dipakai hanya saat DB kosong) ----------
     const defaultData = [
       {
         nama: "Kopi Arabica Gayo",
@@ -437,14 +454,7 @@
       }
     ];
 
-    if (!localStorage.getItem("produkData")) {
-      localStorage.setItem("produkData", JSON.stringify(defaultData));
-    }
-
-    // ---------------------------
-    // Elemen DOM (script1 - preserved)
-    // ---------------------------
-    // Public
+    // ---------- DOM elements ----------
     const searchPublic = document.getElementById("searchPublic");
     const filterJenisPublic = document.getElementById("filterJenisPublic");
     const filterGradePublic = document.getElementById("filterGradePublic");
@@ -454,7 +464,6 @@
     const detailContent = document.getElementById("detailContent");
     const backToList = document.getElementById("backToList");
 
-    // Admin modal / panel
     const loginBtn = document.getElementById("loginBtn");
     const loginModal = document.getElementById("loginModal");
     const cancelLogin = document.getElementById("cancelLogin");
@@ -473,7 +482,6 @@
     const filterKategoriAdmin = document.getElementById("filterKategoriAdmin");
     const adminProdukList = document.getElementById("adminProdukList");
 
-    // form elements
     const formTitle = document.getElementById("formTitle");
     const newNama = document.getElementById("newNama");
     const newJenis = document.getElementById("newJenis");
@@ -494,31 +502,24 @@
     const addProduk = document.getElementById("addProduk");
     const resetForm = document.getElementById("resetForm");
 
-    // navbar links
     const navLinkHome = document.getElementById("navLinkHome");
     const navLinkProduk = document.getElementById("navLinkProduk");
     const navLinkTentang = document.getElementById("navLinkTentang");
     const btnLihatProduk = document.getElementById("btnLihatProduk");
 
-    // ---------------------------
-    // Helper: simpan ke localStorage
-    // ---------------------------
-    function saveData() {
-      localStorage.setItem("produkData", JSON.stringify(produkData));
-    }
+    const pageDetail = document.getElementById('pageDetail');
+    const btnKembali = document.getElementById('btnKembali');
 
-    // ---------------------------
-    // Data variable
-    // ---------------------------
-    let produkData = JSON.parse(localStorage.getItem("produkData")) || [];
-    let editIndex = null;
-    let uploadedImage = ""; // dataURL preview saat upload
+    // ---------- App State ----------
+    let produkData = []; // array of { id: key, ...fields }
+    let editId = null;   // firebase key for editing
+    let uploadedImage = ""; // dataURL or url
+    let radarChart = null;
+    let barChart = null;
 
-    // ---------------------------
-    // Utility: matching filters/search
-    // ---------------------------
+    // ---------- Helpers ----------
     function matchesFilter(item, q, jenis, grade, kategori) {
-      const qLow = q.trim().toLowerCase();
+      const qLow = (q || '').trim().toLowerCase();
       const matchesQ = !qLow || (
         (item.nama || "").toLowerCase().includes(qLow) ||
         (item.asal || "").toLowerCase().includes(qLow) ||
@@ -530,11 +531,38 @@
       return matchesQ && matchesJenis && matchesGrade && matchesKategori;
     }
 
-    // ---------------------------
-    // Render PUBLIC (beranda) (script1 - preserved)
-    // ---------------------------
+    // ---------- Firebase: seed DB if empty ----------
+    async function seedIfEmpty() {
+      const snap = await get(produkRef);
+      if (!snap.exists()) {
+        // push each default item
+        defaultData.forEach(item => {
+          const p = Object.assign({}, item, { createdAt: Date.now() });
+          push(produkRef).then(r => set(r, p));
+        });
+      }
+    }
+
+    // ---------- Firebase: load produk realtime ----------
+    function bindProdukRealtime() {
+      onValue(produkRef, (snapshot) => {
+        const raw = snapshot.val() || {};
+        produkData = Object.keys(raw).map(k => {
+          return Object.assign({ id: k }, raw[k]);
+        }).sort((a,b)=> (b.createdAt||0) - (a.createdAt||0)); // newest first
+        renderProdukPublic();
+        renderProdukAdmin();
+        // if URL hash matches key, open detail
+        if (window.location.hash.startsWith('#detail=')) {
+          const id = window.location.hash.split('=')[1];
+          const found = produkData.findIndex(p => p.id === id);
+          if (found !== -1) openPremiumDetailById(id);
+        }
+      });
+    }
+
+    // ---------- Render Public ----------
     function renderProdukPublic() {
-      produkData = JSON.parse(localStorage.getItem("produkData")) || [];
       const q = searchPublic.value || "";
       const jenis = filterJenisPublic.value;
       const grade = filterGradePublic.value;
@@ -546,12 +574,10 @@
         return;
       }
       filtered.forEach((kopi) => {
-        const index = produkData.indexOf(kopi);
-
-        // create button-card so it's keyboard accessible and clearly clickable
         const cardBtn = document.createElement('button');
         cardBtn.className = "bg-stone-50 shadow-md rounded-2xl overflow-hidden hover:shadow-xl transition hover:-translate-y-1 cursor-pointer text-left";
         cardBtn.setAttribute('type','button');
+        cardBtn.dataset.id = kopi.id;
         cardBtn.innerHTML = `
           <img src="${kopi.gambar || 'https://via.placeholder.com/600x400?text=No+Image'}" alt="${kopi.nama}" class="h-52 w-full object-cover">
           <div class="p-5">
@@ -560,21 +586,16 @@
             <p class="text-sm text-stone-500 mb-1">Kategori: ${kopi.kategori || '-'}</p>
             <p class="text-stone-700 text-sm">${(kopi.deskripsi || '').slice(0, 160)}${(kopi.deskripsi || '').length>160? '...':''}</p>
           </div>`;
-
-        // When clicked, open the premium detail full-page (SPA) - uses the same data source
-        cardBtn.addEventListener('click', () => openPremiumDetail(index));
+        cardBtn.addEventListener('click', () => openPremiumDetailById(kopi.id));
         produkList.appendChild(cardBtn);
       });
     }
 
-    // ---------------------------
-    // ORIGINAL openDetail (kept, not removed) - still used for small detailView if needed
-    // ---------------------------
-    function openDetail(index, clickedEl) {
-      produkData = JSON.parse(localStorage.getItem("produkData")) || [];
-      const p = produkData[index];
-      if (!p) return alert("Produk tidak ditemukan.");
-      // animasi: hide list, show detail
+    // ---------- Open small detail (kept for compatibility) ----------
+    function openDetailById(id) {
+      const idx = produkData.findIndex(p => p.id === id);
+      if (idx === -1) return alert("Produk tidak ditemukan.");
+      const p = produkData[idx];
       produkList.classList.add('hidden');
       detailView.classList.remove('hidden');
 
@@ -613,64 +634,29 @@
         </div>
       `;
 
-      // attach edit handler if admin
       if (adminLogin) {
         document.getElementById('editFromDetail').addEventListener('click', () => {
-          // buka admin panel dan isi form
           openAdminPanel();
-          // set editIndex and fill form
-          editIndex = index;
+          editId = p.id;
           formTitle.textContent = "Edit Produk";
           addProduk.textContent = "Simpan Perubahan";
-          const pData = produkData[index];
-          newNama.value = pData.nama || '';
-          newJenis.value = pData.jenis || '';
-          newAsal.value = pData.asal || '';
-          newHarga.value = pData.harga || '';
-          newAroma.value = pData.aroma || '';
-          newRasa.value = pData.rasa || '';
-          newKeasaman.value = pData.keasaman || '';
-          newBody.value = pData.body || '';
-          newGrade.value = pData.grade || '';
-          newKadarAir.value = pData.kadarAir || '';
-          newDefect.value = pData.defect || '';
-          newScreen.value = pData.screen || '';
-          newKategori.value = pData.kategori || '';
-          newDeskripsi.value = pData.deskripsi || '';
-          uploadedImage = pData.gambar || '';
-          if (uploadedImage) {
-            previewGambar.src = uploadedImage;
-            previewGambar.classList.remove('hidden');
-          } else {
-            previewGambar.classList.add('hidden');
-          }
+          fillFormFromProduct(p);
         });
       }
 
       document.getElementById('shareBtn').addEventListener('click', () => {
-        // buat URL dengan query param index (local approach)
         const url = new URL(window.location.href);
-        url.hash = `detail=${index}`;
+        url.hash = `detail=${id}`;
         navigator.clipboard && navigator.clipboard.writeText(url.toString());
         alert("Link detail produk disalin ke clipboard.");
       });
 
-      // update URL hash untuk share / cara kembali langsung
-      window.location.hash = `detail=${index}`;
+      window.location.hash = `detail=${id}`;
     }
 
-    // ---------------------------
-    // NEW: openPremiumDetail (uses same produkData) - SPA full page
-    // ---------------------------
-    const pageDetail = document.getElementById('pageDetail');
-    const btnKembali = document.getElementById('btnKembali');
-
-    let radarChart = null;
-    let barChart = null;
-
-    function openPremiumDetail(index) {
-      produkData = JSON.parse(localStorage.getItem("produkData")) || [];
-      const p = produkData[index];
+    // ---------- Open Premium Detail by id (full page) ----------
+    function openPremiumDetailById(id) {
+      const p = produkData.find(x => x.id === id);
       if (!p) return alert("Produk tidak ditemukan.");
 
       // populate hero
@@ -697,7 +683,7 @@
       document.getElementById('dlKategori').textContent = p.kategori || '-';
       document.getElementById('dlAroma').textContent = p.aroma || '-';
 
-      // Taste pills (split rasa string by commas or spaces)
+      // Taste pills
       const tasteEl = document.getElementById('tastePills');
       tasteEl.innerHTML = '';
       const tastes = (p.rasa || '').split(/[,;\/•]/).map(s=>s.trim()).filter(Boolean);
@@ -709,7 +695,7 @@
         tasteEl.appendChild(d);
       });
 
-      // tags keywords (kategori, jenis, grade, aroma)
+      // tags
       const tagBox = document.getElementById('tagList');
       tagBox.innerHTML = '';
       const tags = [p.kategori, p.jenis, p.grade, p.aroma].filter(Boolean);
@@ -723,23 +709,21 @@
         tagBox.appendChild(el);
       });
 
-      // QR code (simple - encode local link with hash)
+      // QR code
       const qrContainer = document.getElementById('qrContainer');
       qrContainer.innerHTML = '';
       try {
         const qrcode = new QRCode(qrContainer, {
-          text: window.location.origin + window.location.pathname + '#detail=' + index,
+          text: window.location.origin + window.location.pathname + '#detail=' + id,
           width: 120,
           height: 120
         });
-      } catch(e){ /* ignore qr errors */ }
+      } catch(e){}
 
-      // Chart data (build from fields - since original data doesn't have numeric arrays for taste,
-      // we derive approximate numeric profile from keasaman/body/grade/aroma heuristics)
+      // Charts
       const radarCtx = document.getElementById('radarTaste').getContext('2d');
       const barCtx = document.getElementById('barRoast').getContext('2d');
 
-      // compute approximate profile (0-10)
       const getScore = (key) => {
         const v = (p[key] || '').toString().toLowerCase();
         if(!v) return 5;
@@ -762,7 +746,7 @@
         return 5;
       };
 
-      const aromaScore = 7; // generic
+      const aromaScore = 7;
       const acidityScore = getScore('keasaman');
       const bodyScore = getScore('body');
       const sweetnessScore = p.rasa && p.rasa.toLowerCase().includes('manis') ? 7 : 4;
@@ -771,7 +755,6 @@
       const radarLabels = ['Aroma','Acidity','Body','Sweetness','Aftertaste'];
       const radarData = [aromaScore, acidityScore, bodyScore, sweetnessScore, aftertasteScore];
 
-      // destroy previous charts if exist
       if (radarChart) { radarChart.destroy(); radarChart = null; }
       if (barChart) { barChart.destroy(); barChart = null; }
 
@@ -803,7 +786,6 @@
         }
       });
 
-      // bar roast placeholder (we do a roast-level indicator)
       const roastLabels = ['Roast Level'];
       const roastVal = (p.kategori && p.kategori.toLowerCase().includes('roast')) ? 7 : 4;
       barChart = new Chart(barCtx, {
@@ -828,7 +810,7 @@
         }
       });
 
-      // hide main list & show pageDetail as SPA full page
+      // show/hide sections
       document.getElementById('mainNav').classList.add('hidden');
       document.getElementById('home').classList.add('hidden');
       document.getElementById('produk').classList.add('hidden');
@@ -837,67 +819,43 @@
 
       pageDetail.classList.remove('hidden');
       pageDetail.setAttribute('aria-hidden','false');
-
-      // update URL hash so linkable
-      window.location.hash = `detail=${index}`;
+      window.location.hash = `detail=${id}`;
     }
 
     // back from premium detail
     btnKembali.addEventListener('click', () => {
       pageDetail.classList.add('hidden');
       pageDetail.setAttribute('aria-hidden','true');
-      // show main UI
       document.getElementById('mainNav').classList.remove('hidden');
       document.getElementById('home').classList.remove('hidden');
       document.getElementById('produk').classList.remove('hidden');
       document.getElementById('tentang').classList.remove('hidden');
       document.querySelector('footer').classList.remove('hidden');
-      // reset hash
       if (window.location.hash.startsWith('#detail')) history.replaceState(null, '', window.location.pathname + window.location.search);
-      // scroll top
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
-    // ---------------------------
-    // Event: real-time filter (public & admin)
-    // ---------------------------
+    // ---------- Filters events ----------
     [searchPublic, filterJenisPublic, filterGradePublic, filterKategoriPublic].forEach(el => {
       el && el.addEventListener('input', renderProdukPublic);
       el && el.addEventListener('change', renderProdukPublic);
     });
 
-    // ---------------------------
-    // Initial render
-    // ---------------------------
-    renderProdukPublic();
-
-    // handle URL hash open detail when page loaded with #detail=idx
-    window.addEventListener('load', () => {
-      if (window.location.hash.startsWith('#detail=')) {
-        const idx = parseInt(window.location.hash.split('=')[1]);
-        if (!isNaN(idx)) openPremiumDetail(idx);
-      }
-    });
-
-    // ---------------------------
-    // Login modal logic (script1 - preserved)
-    // ---------------------------
+    // ---------- Login modal ----------
     loginBtn.onclick = () => loginModal.classList.remove('hidden');
     cancelLogin.onclick = () => loginModal.classList.add('hidden');
     loginSubmit.onclick = () => {
       const user = document.getElementById("username").value.trim();
       const pass = document.getElementById("password").value.trim();
-      // credential sederhana: admin / 12345
       if (user === "admin" && pass === "12345") {
         loginModal.classList.add('hidden');
-        document.getElementById('mainNav').classList.add('hidden'); // sembunyikan nav agar admin panel tampak terpisah
+        document.getElementById('mainNav').classList.add('hidden');
         document.getElementById('home').classList.add('hidden');
         document.getElementById('produk').classList.add('hidden');
         document.getElementById('tentang').classList.add('hidden');
         document.querySelector('footer').classList.add('hidden');
         adminPanel.classList.remove('hidden');
         localStorage.setItem("isAdminLogin", "true");
-        // logoutBtn exists (hidden) - safe to remove class
         try { logoutBtn.classList.remove('hidden'); } catch(e){}
         renderProdukAdmin();
       } else {
@@ -905,25 +863,21 @@
       }
     };
 
-    // ---------------------------
-    // Upload gambar preview (convert ke dataURL)
-    // ---------------------------
+    // ---------- File upload ----------
     newGambarFile.onchange = (e) => {
       const file = e.target.files[0];
       if (!file) return;
       const reader = new FileReader();
       reader.onload = (ev) => {
-        uploadedImage = ev.target.result; // dataURL
+        uploadedImage = ev.target.result;
         previewGambar.src = uploadedImage;
         previewGambar.classList.remove('hidden');
       };
       reader.readAsDataURL(file);
     };
 
-    // ---------------------------
-    // Tambah / Simpan produk (juga update saat edit) (script1 - preserved)
-    // ---------------------------
-    addProduk.onclick = () => {
+    // ---------- Add / Update produk (Firebase) ----------
+    addProduk.onclick = async () => {
       const obj = {
         nama: newNama.value.trim(),
         jenis: newJenis.value.trim(),
@@ -939,35 +893,38 @@
         screen: newScreen.value.trim(),
         kategori: newKategori.value,
         deskripsi: newDeskripsi.value.trim(),
-        gambar: uploadedImage || ''
+        gambar: uploadedImage || '',
+        updatedAt: Date.now()
       };
-      // validasi minimal
       if (!obj.nama || !obj.asal || !obj.jenis || !obj.harga || !obj.deskripsi) {
         return alert("Lengkapi field wajib: Nama, Asal, Jenis, Harga, Deskripsi.");
       }
 
-      if (editIndex === null) {
-        produkData.push(obj);
-      } else {
-        produkData[editIndex] = obj;
-        editIndex = null;
-        formTitle.textContent = "Tambah Produk Baru";
-        addProduk.textContent = "Tambah Produk";
+      try {
+        if (!editId) {
+          // create new
+          await push(produkRef).then(r => set(r, Object.assign({}, obj, { createdAt: Date.now() })));
+        } else {
+          // update existing
+          await update(ref(db, 'produk/' + editId), obj);
+          editId = null;
+          formTitle.textContent = "Tambah Produk Baru";
+          addProduk.textContent = "Tambah Produk";
+        }
+        fillFormClear();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (err) {
+        console.error(err);
+        alert("Terjadi kesalahan saat menyimpan ke Firebase.");
       }
-
-      saveData();
-      renderProdukPublic();
-      renderProdukAdmin();
-      resetFormFields();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    // Reset form
-    resetForm.onclick = resetFormFields;
-    function resetFormFields() {
+    // ---------- Reset form ----------
+    resetForm.onclick = fillFormClear;
+    function fillFormClear() {
       formTitle.textContent = "Tambah Produk Baru";
       addProduk.textContent = "Tambah Produk";
-      editIndex = null;
+      editId = null;
       uploadedImage = "";
       previewGambar.classList.add('hidden');
       previewGambar.src = '';
@@ -977,15 +934,8 @@
       newGambarFile.value = '';
     }
 
-    // ---------------------------
-    // Edit & Hapus fungsi (global supaya dipanggil oleh onclick html) (script1 - preserved)
-    // ---------------------------
-    window.editProduk = (index) => {
-      const p = produkData[index];
-      if (!p) return alert("Produk tidak ditemukan.");
-      editIndex = index;
-      formTitle.textContent = "Edit Produk";
-      addProduk.textContent = "Simpan Perubahan";
+    // ---------- Fill form from product ----------
+    function fillFormFromProduct(p) {
       newNama.value = p.nama || '';
       newJenis.value = p.jenis || '';
       newAsal.value = p.asal || '';
@@ -1007,22 +957,36 @@
       } else {
         previewGambar.classList.add('hidden');
       }
+    }
+
+    // ---------- Edit & Delete (global) ----------
+    window.editProduk = (id) => {
+      const p = produkData.find(x => x.id === id);
+      if (!p) return alert("Produk tidak ditemukan.");
+      editId = id;
+      formTitle.textContent = "Edit Produk";
+      addProduk.textContent = "Simpan Perubahan";
+      fillFormFromProduct(p);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    window.hapusProduk = (index) => {
+    window.hapusProduk = async (id) => {
       if (!confirm("Yakin ingin menghapus produk ini?")) return;
-      produkData.splice(index, 1);
-      saveData();
-      renderProdukPublic();
-      renderProdukAdmin();
+      try {
+        await remove(ref(db, 'produk/' + id));
+      } catch(e) {
+        console.error(e);
+        alert("Gagal menghapus produk.");
+      }
     };
 
-    // ---------------------------
-    // Export JSON / CSV (script1 - preserved)
-    // ---------------------------
+    // ---------- Export JSON / CSV ----------
     exportJsonBtn.onclick = () => {
-      const blob = new Blob([JSON.stringify(produkData, null, 2)], { type: "application/json" });
+      const arr = produkData.map(x => {
+        const { id, ...rest } = x;
+        return rest;
+      });
+      const blob = new Blob([JSON.stringify(arr, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -1045,7 +1009,11 @@
     }
 
     exportCsvBtn.onclick = () => {
-      const csv = toCsv(produkData);
+      const arr = produkData.map(x => {
+        const { id, ...rest } = x;
+        return rest;
+      });
+      const csv = toCsv(arr);
       const blob = new Blob([csv], { type: "text/csv" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -1055,18 +1023,14 @@
       URL.revokeObjectURL(url);
     };
 
-    // ---------------------------
-    // Navigasi admin <-> home (script1 - preserved)
-    // ---------------------------
+    // ---------- Admin nav ----------
     homeBtn.onclick = () => {
-      // keluar admin panel dan kembalikan tampilan beranda
       document.getElementById('mainNav').classList.remove('hidden');
       document.getElementById('home').classList.remove('hidden');
       document.getElementById('produk').classList.remove('hidden');
       document.getElementById('tentang').classList.remove('hidden');
       document.querySelector('footer').classList.remove('hidden');
       adminPanel.classList.add('hidden');
-      // set login flag so edit button visible in detail
       localStorage.setItem("isAdminLogin", "true");
       renderProdukAdmin();
       renderProdukPublic();
@@ -1076,7 +1040,6 @@
     logoutAdminBtn.onclick = () => {
       alert("Anda telah keluar dari panel admin.");
       localStorage.removeItem("isAdminLogin");
-      // reload agar UI kembali normal
       window.location.reload();
     };
 
@@ -1087,11 +1050,8 @@
       renderProdukPublic();
     };
 
-    // ---------------------------
-    // Render ADMIN list (script1 - preserved)
-    // ---------------------------
+    // ---------- Render Admin ----------
     function renderProdukAdmin() {
-      produkData = JSON.parse(localStorage.getItem("produkData")) || [];
       adminProdukList.innerHTML = "";
       const q = searchAdmin.value || "";
       const jenis = filterJenisAdmin.value;
@@ -1114,16 +1074,14 @@
             <p class="text-sm text-stone-500">Kategori: ${kopi.kategori}</p>
             <p class="text-sm text-stone-500">Harga: Rp${kopi.harga || '-'}</p>
             <div class="flex justify-between mt-3">
-              <button onclick="editProduk(${index})" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">✏️ Edit</button>
-              <button onclick="hapusProduk(${index})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">🗑️ Hapus</button>
+              <button onclick="editProduk('${kopi.id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">✏️ Edit</button>
+              <button onclick="hapusProduk('${kopi.id}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">🗑️ Hapus</button>
             </div>
           </div>`;
       });
     }
 
-    // ---------------------------
-    // Optional: keyboard shortcuts
-    // ---------------------------
+    // ---------- Keyboard shortcut ----------
     document.addEventListener('keydown', (e) => {
       if (e.ctrlKey && e.key.toLowerCase() === 'f') {
         e.preventDefault();
@@ -1135,9 +1093,7 @@
       }
     });
 
-    // ---------------------------
-    // Helpers: open admin panel from detail or other
-    // ---------------------------
+    // ---------- Helpers ----------
     function openAdminPanel() {
       document.getElementById('mainNav').classList.add('hidden');
       document.getElementById('home').classList.add('hidden');
@@ -1148,23 +1104,14 @@
       localStorage.setItem("isAdminLogin", "true");
       renderProdukAdmin();
     }
-
-    // Expose openAdminPanel so onclick from detail can call it
     window.openAdminPanel = openAdminPanel;
 
-    // ---------------------------
-    // Event listeners for admin filter/search
-    // ---------------------------
     [searchAdmin, filterJenisAdmin, filterGradeAdmin, filterKategoriAdmin].forEach(el => {
       el && el.addEventListener('input', renderProdukAdmin);
     });
 
-    // ---------------------------
-    // Navbar / link handlers
-    // ---------------------------
     navLinkHome.addEventListener('click', (e) => {
       e.preventDefault();
-      // scroll to home section
       document.getElementById('home').scrollIntoView({ behavior: 'smooth' });
     });
     navLinkProduk.addEventListener('click', (e) => {
@@ -1180,23 +1127,20 @@
       document.getElementById('produk').scrollIntoView({ behavior: 'smooth' });
     });
 
-    // ---------------------------
-    // Inisialisasi terakhir
-    // ---------------------------
-    // render awal public & admin (jika admin login)
-    renderProdukPublic();
-    if (localStorage.getItem("isAdminLogin") === "true") {
-      // langsung buka admin panel if previously logged in
-      // but per UX we show adminPanel only when login pressed originally; we'll show logout button though
-      try { logoutBtn.classList.remove('hidden'); } catch(e){}
-      renderProdukAdmin();
-    }
+    // ---------- Initialisation ----------
+    (async () => {
+      try {
+        await seedIfEmpty();
+      } catch(e){ console.warn('Seed error', e); }
+      bindProdukRealtime();
+      if (localStorage.getItem("isAdminLogin") === "true") {
+        try { logoutBtn.classList.remove('hidden'); } catch(e){}
+        renderProdukAdmin();
+      }
+    })();
 
-    // Expose some functions globally (for compatibility)
-    window.openDetail = openDetail;
-    window.editProduk = window.editProduk || function(i){ editProduk(i); };
-    window.hapusProduk = window.hapusProduk || function(i){ hapusProduk(i); };
-    window.openAdminPanel = openAdminPanel;
+    // Expose small-detail open for compatibility
+    window.openDetail = (id) => openDetailById(id);
 
   </script>
 </body>
