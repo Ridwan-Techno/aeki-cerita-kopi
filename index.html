@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AEKI - Cerita Kopi (Final)</title>
+  <title>AEKI - Cerita Kopi (Final) — dengan Stok</title>
 
   <!-- Tailwind + Font -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -60,14 +60,14 @@
       backdrop-filter: blur(4px);
       cursor: pointer;
     }
-    .hero{ display:flex; gap:20px; align-items:center; margin-top:14px; }
-    .img-hero { width:360px; height:260px; object-fit:cover; border-radius:12px; box-shadow: 0 8px 20px rgba(0,0,0,0.6); }
-    .badge { background: linear-gradient(90deg,var(--coffee-700),var(--coffee-600)); padding:6px 10px; border-radius:999px; display:inline-block; font-size:13px; color:#fff; margin-bottom:8px; }
-    .pm-title { font-size:26px; margin:0 0 6px 0; color:#fff; }
+    .hero{ display:flex; gap:20px; align-items:flex-start; margin-top:14px; }
+    .img-hero { width:420px; height:300px; object-fit:cover; border-radius:12px; box-shadow: 0 8px 20px rgba(0,0,0,0.6); }
+    .badge { background: linear-gradient(90deg,var(--coffee-700),var(--coffee-600)); padding:6px 10px; border-radius:777px; display:inline-block; font-size:13px; color:#fff; margin-bottom:100px; }
     .sub { color: rgba(255,255,255,0.78); margin-bottom:10px; }
-    .meta-row { display:flex; gap:10px; flex-wrap:wrap; margin-top:8px; }
+    .pm-title { font-size:26px; margin:0 0 -40px 0; color:#fff; }
+    
+    .meta-row { display:flex; gap:10px; flex-wrap:wrap; margin-top20px; }
     .pill { background: rgba(255,255,255,0.06); padding:6px 10px; border-radius:999px; color:#fff; font-size:13px; }
-
     .grid-prem { display:grid; grid-template-columns: 1fr 360px; gap:18px; margin-top:20px; }
     .card-prem { background: rgba(255,255,255,0.03); padding:16px; border-radius:10px; color:rgba(255,255,255,0.95); }
     .muted { color: rgba(255,255,255,0.75); }
@@ -240,6 +240,7 @@
 
           <input id="newAsal" type="text" placeholder="Asal Daerah *" class="border px-3 py-2 rounded">
           <input id="newHarga" type="number" placeholder="Harga (Rp) *" class="border px-3 py-2 rounded">
+          <input id="newStok" type="number" placeholder="Stok (Jumlah Unit)" class="border px-3 py-2 rounded">
 
           <input id="newAroma" type="text" placeholder="Karakteristik Aroma" class="border px-3 py-2 rounded">
           <input id="newRasa" type="text" placeholder="Karakteristik Rasa" class="border px-3 py-2 rounded">
@@ -286,23 +287,29 @@
       <header class="hero">
         <img id="detailImgHero" class="img-hero" src="" alt="Gambar Produk">
         <div>
+	  
+	  <h1 class="pm-title" id="detailNama">Nama Produk</h1>
+	  
+          <p id="detailRingkasan" class="muted" style="margin-top:40px;">Deskripsi tentang produk — diisi dari form.</p>
           <div class="badge" id="detailBadge">Single Origin • Arabica</div>
-          <h1 class="pm-title" id="detailNama">Nama Produk</h1>
+	  
           <div class="sub" id="detailSub">Subjudul / ringkasan singkat</div>
-
           <div class="meta-row">
             <div class="pill" id="pillAsal"></div>
             <div class="pill" id="pillHarga"></div>
             <div class="pill" id="pillJenis"></div>
           </div>
+	
         </div>
       </header>
 
-      <div class="grid-prem" style="margin-top:18px;">
+      <div class="grid-prem" style="margin-top:20px;">
         <main>
           <section class="card-prem">
+
+
             <h3 class="text-lg font-semibold">Profil Rasa & Visualisasi</h3>
-            <div style="display:flex;gap:16px;margin-top:12px;align-items:flex-start;flex-wrap:wrap;">
+            <div style="display:flex;gap:12px;margin-top:8px;align-items:flex-start;flex-wrap:wrap;">
               <div style="flex:1;min-width:260px;">
                 <p class="muted">Grafik radar menunjukkan intensitas profil rasa (Aroma, Acidity, Body, Sweetness, Aftertaste).</p>
                 <div class="charts" style="margin-top:12px;">
@@ -325,6 +332,7 @@
                     <dt style="font-size:13px;color:rgba(255,255,255,0.75)">Nama</dt><dd id="asideNama">—</dd>
                     <dt style="font-size:13px;color:rgba(255,255,255,0.75)">Asal</dt><dd id="asideAsal">—</dd>
                     <dt style="font-size:13px;color:rgba(255,255,255,0.75)">Harga/kg</dt><dd id="asideHarga">—</dd>
+                    <dt style="font-size:13px;color:rgba(255,255,255,0.75)">Stok</dt><dd id="asideStok">—</dd>
                   </dl>
 
                   <div id="qrContainer" style="margin-top:12px;text-align:center;"></div>
@@ -334,8 +342,6 @@
 
             <hr style="opacity:0.06;margin:14px 0">
 
-            <h3 class="text-lg font-semibold">Deskripsi</h3>
-            <p id="detailRingkasan" class="muted" style="margin-top:8px;">Deskripsi tentang produk — diisi dari form.</p>
 
             <div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-top:12px">
               <div style="flex:1;min-width:240px">
@@ -354,6 +360,7 @@
                   <dt style="font-size:13px;color:rgba(255,255,255,0.75)">Jenis</dt><dd id="dlJenis">—</dd>
                   <dt style="font-size:13px;color:rgba(255,255,255,0.75)">Kategori</dt><dd id="dlKategori">—</dd>
                   <dt style="font-size:13px;color:rgba(255,255,255,0.75)">Aroma</dt><dd id="dlAroma">—</dd>
+                  <dt style="font-size:13px;color:rgba(255,255,255,0.75)">Stok</dt><dd id="dlStok">—</dd>
                 </dl>
               </div>
             </div>
@@ -416,7 +423,8 @@
         screen: "17-18",
         kategori: "Green Bean",
         deskripsi: "Rasa fruity dengan keasaman seimbang dan aroma khas.",
-        gambar: "https://images.unsplash.com/photo-1510626176961-4b57d4fbad03"
+        gambar: "https://images.unsplash.com/photo-1510626176961-4b57d4fbad03",
+        stok: 25
       },
       {
         nama: "Kopi Toraja Kalosi",
@@ -433,7 +441,8 @@
         screen: "18",
         kategori: "Roasting",
         deskripsi: "Body penuh dengan aftertaste manis seperti cokelat.",
-        gambar: "https://images.unsplash.com/photo-1459755486867-b55449bb39ff"
+        gambar: "https://images.unsplash.com/photo-1459755486867-b55449bb39ff",
+        stok: 10
       },
       {
         nama: "Kopi Kintamani",
@@ -450,7 +459,8 @@
         screen: "17",
         kategori: "Green Bean",
         deskripsi: "Cita rasa citrus segar dengan keasaman tinggi yang menyenangkan.",
-        gambar: "https://images.unsplash.com/photo-1511537190424-bbbab87ac5eb"
+        gambar: "https://images.unsplash.com/photo-1511537190424-bbbab87ac5eb",
+        stok: 0
       }
     ];
 
@@ -487,6 +497,7 @@
     const newJenis = document.getElementById("newJenis");
     const newAsal = document.getElementById("newAsal");
     const newHarga = document.getElementById("newHarga");
+    const newStok = document.getElementById("newStok");
     const newAroma = document.getElementById("newAroma");
     const newRasa = document.getElementById("newRasa");
     const newKeasaman = document.getElementById("newKeasaman");
@@ -584,7 +595,8 @@
             <h3 class="text-xl font-semibold mb-1">${kopi.nama}</h3>
             <p class="text-sm text-stone-500 mb-1">Grade: ${kopi.grade || '-'}</p>
             <p class="text-sm text-stone-500 mb-1">Kategori: ${kopi.kategori || '-'}</p>
-            <p class="text-stone-700 text-sm">${(kopi.deskripsi || '').slice(0, 160)}${(kopi.deskripsi || '').length>160? '...':''}</p>
+            <p class="text-sm text-stone-500 mb-1">Stok: ${typeof kopi.stok !== 'undefined' ? kopi.stok : 0}</p>
+            
           </div>`;
         cardBtn.addEventListener('click', () => openPremiumDetailById(kopi.id));
         produkList.appendChild(cardBtn);
@@ -609,6 +621,7 @@
               <p><strong>Rasa:</strong> ${p.rasa || '-'}</p>
               <p><strong>Keasaman:</strong> ${p.keasaman || '-'}</p>
               <p><strong>Body:</strong> ${p.body || '-'}</p>
+              <p><strong>Stok:</strong> ${typeof p.stok !== 'undefined' ? p.stok : 0}</p>
             </div>
           </div>
           <div>
@@ -673,6 +686,7 @@
       document.getElementById('asideNama').textContent = p.nama || '-';
       document.getElementById('asideAsal').textContent = p.asal || '-';
       document.getElementById('asideHarga').textContent = p.harga ? 'Rp ' + p.harga : '-';
+      document.getElementById('asideStok').textContent = typeof p.stok !== 'undefined' ? p.stok : 0;
 
       // Specs
       document.getElementById('dlGrade').textContent = p.grade || '-';
@@ -682,6 +696,7 @@
       document.getElementById('dlJenis').textContent = p.jenis || '-';
       document.getElementById('dlKategori').textContent = p.kategori || '-';
       document.getElementById('dlAroma').textContent = p.aroma || '-';
+      document.getElementById('dlStok').textContent = typeof p.stok !== 'undefined' ? p.stok : 0;
 
       // Taste pills
       const tasteEl = document.getElementById('tastePills');
@@ -817,6 +832,15 @@
       document.getElementById('tentang').classList.add('hidden');
       document.querySelector('footer').classList.add('hidden');
 
+      // Tambahkan tombol WhatsApp otomatis di halaman detail
+try {
+  if (typeof placeWAButtonUnderHarga === 'function') {
+    placeWAButtonUnderHarga(p);
+  }
+} catch(e) {
+  console.warn('WA button injection error:', e);
+}
+
       pageDetail.classList.remove('hidden');
       pageDetail.setAttribute('aria-hidden','false');
       window.location.hash = `detail=${id}`;
@@ -878,11 +902,13 @@
 
     // ---------- Add / Update produk (Firebase) ----------
     addProduk.onclick = async () => {
+      const stokVal = parseInt(newStok.value, 10);
       const obj = {
         nama: newNama.value.trim(),
         jenis: newJenis.value.trim(),
         asal: newAsal.value.trim(),
         harga: newHarga.value.trim(),
+        stok: isNaN(stokVal) ? 0 : stokVal,
         aroma: newAroma.value.trim(),
         rasa: newRasa.value.trim(),
         keasaman: newKeasaman.value.trim(),
@@ -928,7 +954,7 @@
       uploadedImage = "";
       previewGambar.classList.add('hidden');
       previewGambar.src = '';
-      [newNama, newJenis, newAsal, newHarga, newAroma, newRasa, newKeasaman, newBody, newGrade, newKadarAir, newDefect, newScreen, newKategori, newDeskripsi].forEach(i => {
+      [newNama, newJenis, newAsal, newHarga, newStok, newAroma, newRasa, newKeasaman, newBody, newGrade, newKadarAir, newDefect, newScreen, newKategori, newDeskripsi].forEach(i => {
         if (i) i.value = '';
       });
       newGambarFile.value = '';
@@ -940,6 +966,7 @@
       newJenis.value = p.jenis || '';
       newAsal.value = p.asal || '';
       newHarga.value = p.harga || '';
+      newStok.value = typeof p.stok !== 'undefined' ? p.stok : '';
       newAroma.value = p.aroma || '';
       newRasa.value = p.rasa || '';
       newKeasaman.value = p.keasaman || '';
@@ -1073,6 +1100,7 @@
             <p class="text-sm text-stone-500">Grade: ${kopi.grade}</p>
             <p class="text-sm text-stone-500">Kategori: ${kopi.kategori}</p>
             <p class="text-sm text-stone-500">Harga: Rp${kopi.harga || '-'}</p>
+            <p class="text-sm text-stone-500">Stok: ${typeof kopi.stok !== 'undefined' ? kopi.stok : 0}</p>
             <div class="flex justify-between mt-3">
               <button onclick="editProduk('${kopi.id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">✏️ Edit</button>
               <button onclick="hapusProduk('${kopi.id}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">🗑️ Hapus</button>
@@ -1143,6 +1171,49 @@
     window.openDetail = (id) => openDetailById(id);
 
   </script>
+
+<!-- END: WhatsApp order modal & button integration (fixed) -->
+
 </body>
 </html>
 
+<!-- START: Simplified WhatsApp direct order button -->
+<script>
+(function(){
+  const WA_NUMBER = "6282164966635";
+  const WA_BASE = "https://wa.me/" + WA_NUMBER + "?text=";
+
+  function createDirectWAButton(prod){
+    const target = document.querySelector('.meta-row');
+    if(!target) return;
+    if(!(prod.stok && parseInt(prod.stok) > 0)) return; // hanya tampil jika stok > 0
+
+    const existing = document.getElementById('waContainerInjected');
+    if(existing) existing.remove();
+
+    const btn = document.createElement('a');
+    btn.id = 'waContainerInjected';
+    btn.href = '#';
+    btn.innerHTML = 'Pesan via WhatsApp';
+    btn.style.background = '#25D366';
+    btn.style.color = '#fff';
+    btn.style.padding = '8px 12px';
+    btn.style.borderRadius = '8px';
+    btn.style.display = 'inline-block';
+    btn.style.marginTop = '8px';
+    btn.style.fontWeight = '600';
+    btn.style.textDecoration = 'none';
+    btn.onclick = (e) => {
+      e.preventDefault();
+      const msg = `Halo AEKI, saya ingin memesan ${prod.nama} (jumlah: ${prod.stok}gram, harga: Rp ${prod.harga}).`;
+      window.open(WA_BASE + encodeURIComponent(msg), '_blank');
+    };
+
+    target.insertAdjacentElement('afterend', btn);
+  }
+
+  // Panggil dari openPremiumDetailById bila tersedia
+  window.placeWAButtonUnderHarga = createDirectWAButton;
+})();
+</script>
+<!-- END: Simplified WhatsApp direct order button -->
