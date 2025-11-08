@@ -280,112 +280,113 @@
   </div>
 
   <!-- ===== Halaman Detail Premium (disembunyikan default) ===== -->
-  <div class="detail-premium hidden" id="pageDetail" aria-hidden="true">
-    <div class="container-prem">
-      <button class="back-prem" id="btnKembali">← Kembali ke Daftar Produk</button>
+  
+<!-- ===== HALAMAN DETAIL TRENDY (baru) ===== -->
+<div id="pageDetail" class="hidden bg-[#121212] text-gray-100 min-h-screen font-sans" aria-hidden="true">
+  <div class="max-w-6xl mx-auto py-10 px-4">
 
-      <header class="hero">
-        <img id="detailImgHero" class="img-hero" src="" alt="Gambar Produk">
-        <div>
-	  
-	  <h1 class="pm-title" id="detailNama">Nama Produk</h1>
-	  
-          <p id="detailRingkasan" class="muted" style="margin-top:40px;">Deskripsi tentang produk — diisi dari form.</p>
-          <div class="badge" id="detailBadge">Single Origin • Arabica</div>
-	  
-          <div class="sub" id="detailSub">Subjudul / ringkasan singkat</div>
-          <div class="meta-row">
-            <div class="pill" id="pillAsal"></div>
-            <div class="pill" id="pillHarga"></div>
-            <div class="pill" id="pillJenis"></div>
-          </div>
-	
+    <!-- Tombol kembali -->
+    <button id="btnKembali" class="flex items-center gap-2 mb-6 text-gray-300 hover:text-white transition">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+      </svg>
+      Kembali ke Daftar Produk
+    </button>
+
+    <!-- Konten utama -->
+    <div class="bg-[#1E1E1E] rounded-2xl shadow-lg p-6 flex flex-col md:flex-row gap-8">
+      <!-- Gambar -->
+      <div class="flex-1">
+        <img id="detailImgHero" src="" alt="Gambar Produk" class="w-full rounded-xl object-cover shadow-md" />
+      </div>
+
+      <!-- Info -->
+      <div class="flex-[1.5] space-y-4">
+        <h1 id="detailNama" class="text-3xl font-bold text-white">Nama Produk</h1>
+        <p id="detailRingkasan" class="text-gray-300 leading-relaxed">
+          Deskripsi produk akan muncul di sini secara otomatis dari Firebase.
+        </p>
+
+        <div class="flex flex-wrap gap-2 mt-3">
+          <span id="detailBadge" class="bg-green-900/40 text-green-300 px-3 py-1 rounded-full text-sm">Kategori • Jenis</span>
         </div>
-      </header>
 
-      <div class="grid-prem" style="margin-top:20px;">
-        <main>
-          <section class="card-prem">
+        <div class="flex flex-wrap items-center gap-3 mt-2">
+          <span id="pillAsal" class="bg-gray-800 px-3 py-1 rounded-full text-sm">Asal</span>
+          <span id="pillHarga" class="bg-gray-800 px-3 py-1 rounded-full text-sm">Harga</span>
+          <span id="pillJenis" class="bg-gray-800 px-3 py-1 rounded-full text-sm">Jenis</span>
+        </div>
 
-
-            <h3 class="text-lg font-semibold">Profil Rasa & Visualisasi</h3>
-            <div style="display:flex;gap:12px;margin-top:8px;align-items:flex-start;flex-wrap:wrap;">
-              <div style="flex:1;min-width:260px;">
-                <p class="muted">Grafik radar menunjukkan intensitas profil rasa (Aroma, Acidity, Body, Sweetness, Aftertaste).</p>
-                <div class="charts" style="margin-top:12px;">
-                  <div class="chart-box">
-                    <canvas id="radarTaste" width="220" height="180"></canvas>
-                  </div>
-                  <div class="chart-box">
-                    <canvas id="barRoast" width="220" height="180"></canvas>
-                  </div>
-                </div>
-
-                <h4 style="margin-top:14px">Ciri-ciri Rasa</h4>
-                <div class="taste-list" id="tastePills"></div>
-              </div>
-
-              <div style="width:240px;">
-                <h4>Ringkasan Cepat</h4>
-                <div style="background:rgba(255,255,255,0.02);padding:10px;border-radius:8px;margin-top:8px;">
-                  <dl style="color:rgba(255,255,255,0.95);">
-                    <dt style="font-size:13px;color:rgba(255,255,255,0.75)">Nama</dt><dd id="asideNama">—</dd>
-                    <dt style="font-size:13px;color:rgba(255,255,255,0.75)">Asal</dt><dd id="asideAsal">—</dd>
-                    <dt style="font-size:13px;color:rgba(255,255,255,0.75)">Harga/kg</dt><dd id="asideHarga">—</dd>
-                    <dt style="font-size:13px;color:rgba(255,255,255,0.75)">Stok</dt><dd id="asideStok">—</dd>
-                  </dl>
-
-                  <div id="qrContainer" style="margin-top:12px;text-align:center;"></div>
-                </div>
-              </div>
-            </div>
-
-            <hr style="opacity:0.06;margin:14px 0">
-
-
-            <div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-top:12px">
-              <div style="flex:1;min-width:240px">
-                <h3>Spesifikasi</h3>
-                <dl id="dlQuality" style="color:rgba(255,255,255,0.9);">
-                  <dt style="font-size:13px;color:rgba(255,255,255,0.75)">Grade</dt><dd id="dlGrade">—</dd>
-                  <dt style="font-size:13px;color:rgba(255,255,255,0.75)">Kadar Air (Moisture)</dt><dd id="dlMoisture">—</dd>
-                  <dt style="font-size:13px;color:rgba(255,255,255,0.75)">Defects</dt><dd id="dlDefect">—</dd>
-                  <dt style="font-size:13px;color:rgba(255,255,255,0.75)">Ukuran (Screen Size)</dt><dd id="dlScreen">—</dd>
-                </dl>
-              </div>
-
-              <div style="flex:1;min-width:240px">
-                <h3>Detail Teknis</h3>
-                <dl style="color:rgba(255,255,255,0.9);">
-                  <dt style="font-size:13px;color:rgba(255,255,255,0.75)">Jenis</dt><dd id="dlJenis">—</dd>
-                  <dt style="font-size:13px;color:rgba(255,255,255,0.75)">Kategori</dt><dd id="dlKategori">—</dd>
-                  <dt style="font-size:13px;color:rgba(255,255,255,0.75)">Aroma</dt><dd id="dlAroma">—</dd>
-                  <dt style="font-size:13px;color:rgba(255,255,255,0.75)">Stok</dt><dd id="dlStok">—</dd>
-                </dl>
-              </div>
-            </div>
-
-          </section>
-        </main>
-
-        <aside>
-          <div class="card-prem">
-            <h3 class="text-lg font-semibold">Keyword & Tag</h3>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px" id="tagList"></div>
-          </div>
-
-          <div class="card-prem" style="margin-top:12px">
-            <h3 class="text-lg font-semibold">Kontak / Tautan</h3>
-            <div style="margin-top:8px;color:rgba(255,255,255,0.9)">
-              <p class="muted">Gunakan tombol share di halaman produk (public) untuk menyalin link.</p>
-            </div>
-          </div>
-        </aside>
+        <!-- Tombol WhatsApp (akan muncul otomatis via script) -->
+        <div id="waContainerInjected" class="mt-4"></div>
       </div>
     </div>
-  </div>
 
-  <!-- ===== SINGLE MODULE SCRIPT: Firebase + App Logic ===== -->
+    <!-- Bagian bawah -->
+    <div class="grid md:grid-cols-3 gap-6 mt-10">
+
+      <!-- Profil Rasa & Grafik -->
+      <div class="bg-[#1E1E1E] rounded-xl p-5 md:col-span-2">
+        <h2 class="font-semibold text-lg mb-2">Profil Rasa & Visualisasi</h2>
+        <p class="text-gray-400 text-sm">
+          Grafik radar menunjukkan intensitas profil rasa (Aroma, Acidity, Body, Sweetness, Aftertaste).
+        </p>
+        <div class="flex flex-wrap gap-5 mt-5 justify-center">
+          <canvas id="radarTaste" width="240" height="200" class="bg-gray-800/40 p-3 rounded-xl"></canvas>
+          <canvas id="barRoast" width="240" height="200" class="bg-gray-800/40 p-3 rounded-xl"></canvas>
+        </div>
+
+        <h4 class="mt-5 font-semibold">Ciri-ciri Rasa</h4>
+        <div id="tastePills" class="flex flex-wrap gap-2 mt-2"></div>
+      </div>
+
+      <!-- Ringkasan Cepat -->
+      <div class="bg-[#1E1E1E] rounded-xl p-5">
+        <h2 class="font-semibold text-lg mb-3">Ringkasan Cepat</h2>
+        <dl class="text-gray-300 text-sm space-y-1">
+          <dt class="text-gray-400">Nama</dt><dd id="asideNama">—</dd>
+          <dt class="text-gray-400">Asal</dt><dd id="asideAsal">—</dd>
+          <dt class="text-gray-400">Harga/kg</dt><dd id="asideHarga">—</dd>
+          <dt class="text-gray-400">Stok</dt><dd id="asideStok">—</dd>
+        </dl>
+        <div id="qrContainer" class="mt-4 flex justify-center"></div>
+      </div>
+    </div>
+
+    <!-- Spesifikasi & Detail Teknis -->
+    <div class="grid md:grid-cols-2 gap-6 mt-10">
+      <div class="bg-[#1E1E1E] rounded-xl p-5">
+        <h2 class="font-semibold text-lg mb-3">Spesifikasi</h2>
+        <dl class="text-gray-300 text-sm space-y-1">
+          <dt class="text-gray-400">Grade</dt><dd id="dlGrade">—</dd>
+          <dt class="text-gray-400">Kadar Air</dt><dd id="dlMoisture">—</dd>
+          <dt class="text-gray-400">Defects</dt><dd id="dlDefect">—</dd>
+          <dt class="text-gray-400">Screen Size</dt><dd id="dlScreen">—</dd>
+        </dl>
+      </div>
+
+      <div class="bg-[#1E1E1E] rounded-xl p-5">
+        <h2 class="font-semibold text-lg mb-3">Detail Teknis</h2>
+        <dl class="text-gray-300 text-sm space-y-1">
+          <dt class="text-gray-400">Jenis</dt><dd id="dlJenis">—</dd>
+          <dt class="text-gray-400">Kategori</dt><dd id="dlKategori">—</dd>
+          <dt class="text-gray-400">Aroma</dt><dd id="dlAroma">—</dd>
+          <dt class="text-gray-400">Stok</dt><dd id="dlStok">—</dd>
+        </dl>
+      </div>
+    </div>
+
+    <!-- Tag -->
+    <div class="bg-[#1E1E1E] rounded-xl p-5 mt-10">
+      <h2 class="font-semibold text-lg mb-3">Keyword & Tag</h2>
+      <div id="tagList" class="flex flex-wrap gap-2"></div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ===== SINGLE MODULE SCRIPT: Firebase + App Logic ===== -->
   <script type="module">
     // ---------- Firebase config (dari user) ----------
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
@@ -1167,7 +1168,31 @@ try {
       }
     })();
 
-    // Expose small-detail open for compatibility
+    
+// === FIX: Ensure product cards open detail correctly ===
+window.openPremiumDetailById = openPremiumDetailById;
+
+function bindCardClickEvents() {
+  const cards = document.querySelectorAll("#produkList button[data-id]");
+  cards.forEach(btn => {
+    btn.onclick = () => {
+      const id = btn.dataset.id;
+      if (id) {
+        openPremiumDetailById(id);
+      }
+    };
+  });
+}
+
+const oldRenderProdukPublic = renderProdukPublic;
+renderProdukPublic = function () {
+  oldRenderProdukPublic();
+  setTimeout(bindCardClickEvents, 200);
+};
+// === END FIX ===
+
+
+// Expose small-detail open for compatibility
     window.openDetail = (id) => openDetailById(id);
 
   </script>
