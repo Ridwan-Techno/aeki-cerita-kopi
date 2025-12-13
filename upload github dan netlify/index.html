@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AEKI - Cerita Kopi (Final) — dengan Stok</title>
+
+  <!-- Tailwind + Font -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <!-- QR library (keperluan pageDetail) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/2935/2935853.png">
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-stone-50 text-stone-800">
+
+  <!-- NAVBAR (Responsive) -->
+  <nav id="mainNav" class="bg-stone-900 text-white shadow-lg sticky top-0 z-50">
+    <div class="px-6 py-4 flex justify-between items-center">
+      <h1 class="text-2xl font-bold tracking-wide">AEKI <span class="text-amber-400">Cerita Kopi</span></h1>
+      
+      <!-- Desktop Menu -->
+      <div class="hidden md:flex space-x-6 text-base items-center">
+        <a href="#home" id="navLinkHome" class="hover:text-amber-300 transition">Beranda</a>
+        <a href="#produk" id="navLinkProduk" class="hover:text-amber-300 transition">Produk</a>
+        <a href="#tentang" id="navLinkTentang" class="hover:text-amber-300 transition">Tentang</a>
+        <button id="loginBtn" class="bg-amber-500 hover:bg-amber-600 px-4 py-1.5 rounded text-sm transition font-medium">Login</button>
+      </div>
+
+      <!-- Mobile Menu Button -->
+      <button id="mobileMenuBtn" class="md:hidden text-stone-200 hover:text-white focus:outline-none">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Mobile Menu Dropdown -->
+    <div id="mobileMenu" class="hidden md:hidden bg-stone-800 border-t border-stone-700">
+      <div class="flex flex-col p-4 space-y-3">
+        <a href="#home" class="mobile-link block text-stone-200 hover:text-amber-300">Beranda</a>
+        <a href="#produk" class="mobile-link block text-stone-200 hover:text-amber-300">Produk</a>
+        <a href="#tentang" class="mobile-link block text-stone-200 hover:text-amber-300">Tentang</a>
+        <button id="loginBtnMobile" class="bg-amber-500 hover:bg-amber-600 px-4 py-2 rounded text-sm w-full text-left font-semibold">Login Admin</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO (BERANDA) -->
+  <section id="home" class="relative bg-cover bg-center h-[100vh]" style="background-image: url('https://images.unsplash.com/photo-1509042239860-f550ce710b93');">
+    <div class="absolute inset-0 bg-black/40 flex items-center justify-center text-center px-4">
+      <div class="max-w-3xl">
+        <h2 class="text-4xl md:text-6xl font-bold text-white mb-6 drop-shadow-lg leading-tight">Cerita di Setiap Cangkir</h2>
+        <p class="text-stone-100 text-lg md:text-xl mb-8 leading-relaxed font-light">Temukan beragam kopi nusantara pilihan dari AEKI. Setiap biji dipilih dengan hati untuk menghadirkan cita rasa terbaik.</p>
+        <a href="#produk" id="btnLihatProduk" class="bg-amber-500 hover:bg-amber-600 text-white px-8 py-4 rounded-full text-lg transition shadow-lg hover:shadow-xl transform hover:-translate-y-1 inline-block">Lihat Produk</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRODUK SECTION (BERANDA) -->
+  <section id="produk" class="py-24 px-6 md:px-16 bg-white">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl md:text-4xl font-bold text-stone-800 mb-4">Daftar Produk Kopi</h2>
+        <p class="text-stone-500 max-w-2xl mx-auto">Jelajahi koleksi kopi premium kami, dari Aceh hingga Papua.</p>
+      </div>
+
+      <!-- Controls: search + filters (pengunjung) -->
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
+        <input id="searchPublic" type="text" placeholder="Cari nama / asal / jenis..." class="border px-3 py-2 rounded w-full md:w-1/3">
+        <div class="flex gap-3">
+          <select id="filterKategoriPublic" class="border px-3 py-2 rounded">
+            <option value="">Semua Kategori</option>
+            <option>Green Bean</option>
+            <option>Roasting</option>
+            <option>Coffee Powder</option>
+          </select>
+          <select id="filterJenisPublic" class="border px-3 py-2 rounded">
+            <option value="">Semua Jenis</option>
+            <option>Arabica</option>
+            <option>Robusta</option>
+          </select>
+          <select id="filterGradePublic" class="border px-3 py-2 rounded">
+            <option value="">Semua Grade</option>
+            <option>Specialty</option>
+            <option>Premium</option>
+            <option>Commercial</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- LIST PRODUK (PUBLIC) -->
+      <div id="produkList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 transition-all"></div>
+    </div>
+  </section>
+
+  <!-- TENTANG -->
+  <section id="tentang" class="py-24 px-6 md:px-16 bg-stone-100 text-center">
+    <div class="max-w-4xl mx-auto">
+      <h2 class="text-3xl md:text-4xl font-bold mb-6 text-stone-800">Tentang AEKI - Cerita Kopi</h2>
+      <p class="text-stone-600 leading-loose text-lg mb-8">
+        AEKI - Cerita Kopi adalah inisiatif dari Asosiasi Eksportir Kopi Indonesia untuk memperkenalkan
+        kekayaan cita rasa kopi nusantara. Kami percaya setiap biji kopi punya kisah, dari petani hingga cangkir Anda.
+        Misi kami adalah menghubungkan penikmat kopi dengan produsen kopi terbaik di Indonesia.
+      </p>
+      <div class="flex justify-center gap-4">
+        <span class="inline-block w-16 h-1 bg-amber-500 rounded"></span>
+      </div>
+    </div>
+  </section>
+
+  <footer class="bg-stone-900 text-stone-300 text-center py-6 text-sm">
+    © 2025 AEKI - Cerita Kopi. Semua hak dilindungi.
+  </footer>
+
+  <!-- LOGIN MODAL -->
+  <div id="loginModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+    <div class="bg-white p-8 rounded-xl w-96 text-center shadow-lg">
+      <h3 class="text-xl font-bold mb-4">Login Admin</h3>
+      <input id="username" type="text" placeholder="Username" class="border px-3 py-2 rounded w-full mb-3" />
+      <input id="password" type="password" placeholder="Password" class="border px-3 py-2 rounded w-full mb-3" />
+      <div class="flex justify-center space-x-3 mt-4">
+        <button id="loginSubmit" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded">Login</button>
+        <button id="cancelLogin" class="bg-stone-400 hover:bg-stone-500 text-white px-4 py-2 rounded">Batal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden logoutBtn (keperluan script1, tidak menampilkan UI baru) -->
+  <button id="logoutBtn" class="hidden" aria-hidden="true"></button>
+
+  <!-- ADMIN PANEL (dalam satu halaman) -->
+  <div id="adminPanel" class="hidden p-8 bg-stone-100 min-h-screen">
+    <div class="max-w-6xl mx-auto">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-3xl font-bold">Panel Admin - Kelola Produk</h2>
+        <div class="space-x-3">
+          <button id="homeBtn" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded">🏠 Beranda</button>
+          <button id="exportJsonBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">📦 Export JSON</button>
+          <button id="exportCsvBtn" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded">📄 Export CSV</button>
+          <button id="logoutAdminBtn" class="bg-stone-800 hover:bg-stone-900 text-white px-4 py-2 rounded">Logout</button>
+        </div>
+      </div>
+
+      <!-- Admin controls: search + filter -->
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
+        <input id="searchAdmin" type="text" placeholder="Cari (nama / asal / jenis)..." class="border px-3 py-2 rounded w-full md:w-1/3">
+        <div class="flex gap-3">
+          <select id="filterKategoriAdmin" class="border px-3 py-2 rounded">
+            <option value="">Semua Kategori</option>
+            <option>Green Bean</option>
+            <option>Roasting</option>
+            <option>Coffee Powder</option>
+          </select>
+          <select id="filterJenisAdmin" class="border px-3 py-2 rounded">
+            <option value="">Semua Jenis</option>
+            <option>Arabica</option>
+            <option>Robusta</option>
+          </select>
+          <select id="filterGradeAdmin" class="border px-3 py-2 rounded">
+            <option value="">Semua Grade</option>
+            <option>Specialty</option>
+            <option>Premium</option>
+            <option>Commercial</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- FORM TAMBAH / EDIT -->
+      <div class="bg-white p-6 rounded-xl shadow mb-8">
+        <h3 id="formTitle" class="text-lg font-semibold mb-4">Tambah Produk Baru</h3>
+        <div class="grid md:grid-cols-2 gap-4">
+          <select id="newKategori" class="border px-3 py-2 rounded md:col-span-2">
+            <option value="">Pilih Kategori</option>
+            <option>Green Bean</option>
+            <option>Roasting</option>
+            <option>Coffee Powder</option>
+          </select>
+
+          <input id="newNama" type="text" placeholder="Nama Produk *" class="border px-3 py-2 rounded">
+          <input id="newJenis" type="text" placeholder="Jenis Kopi *" class="border px-3 py-2 rounded">
+
+          <input id="newAsal" type="text" placeholder="Asal Daerah *" class="border px-3 py-2 rounded">
+          <input id="newHarga" type="number" placeholder="Harga (Rp) *" class="border px-3 py-2 rounded">
+          <input id="newStok" type="number" placeholder="Stok (Jumlah Unit)" class="border px-3 py-2 rounded">
+
+          <input id="newAroma" type="text" placeholder="Karakteristik Aroma" class="border px-3 py-2 rounded">
+          <input id="newRasa" type="text" placeholder="Karakteristik Rasa" class="border px-3 py-2 rounded">
+
+          <input id="newKeasaman" list="keasamanList" placeholder="Tingkat Keasaman" class="border px-3 py-2 rounded">
+          <datalist id="keasamanList">
+            <option>Rendah</option><option>Sedang</option><option>Tinggi</option>
+          </datalist>
+          <input id="newBody" type="text" placeholder="Body" class="border px-3 py-2 rounded">
+
+          <input id="newGrade" list="gradeList" placeholder="Grade" class="border px-3 py-2 rounded">
+          <datalist id="gradeList">
+            <option>Specialty</option><option>Premium</option><option>Commercial</option>
+          </datalist>
+
+          <input id="newKadarAir" type="text" placeholder="Kadar Air (%)" class="border px-3 py-2 rounded">
+          <input id="newDefect" type="text" placeholder="Defect Value" class="border px-3 py-2 rounded">
+          <input id="newScreen" type="text" placeholder="Screen Size" class="border px-3 py-2 rounded">
+
+          <textarea id="newDeskripsi" rows="3" placeholder="Deskripsi Produk *" class="border px-3 py-2 rounded md:col-span-2"></textarea>
+
+          <div class="md:col-span-2">
+            <input id="newGambarFile" type="file" accept="image/*" class="border px-3 py-2 rounded w-full">
+            <img id="previewGambar" class="mt-3 h-40 object-cover rounded hidden" alt="preview gambar"/>
+          </div>
+        </div>
+
+        <div class="flex gap-3 mt-4">
+          <button id="addProduk" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded">Tambah Produk</button>
+          <button id="resetForm" class="bg-stone-400 hover:bg-stone-500 text-white px-4 py-2 rounded">Reset</button>
+        </div>
+      </div>
+
+      <!-- LIST PRODUK (ADMIN) -->
+      <div id="adminProdukList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+    </div>
+  </div>
+
+  <!-- ===== Halaman Detail Premium (disembunyikan default) ===== -->
+  <div class="detail-premium hidden" id="pageDetail" aria-hidden="true">
+    <div class="container-prem">
+      <button class="back-prem" id="btnKembali">← Kembali ke Daftar Produk</button>
+
+      <header class="hero">
+        <img id="detailImgHero" class="img-hero" src="" alt="Gambar Produk">
+        <div>
+	  
+	  <h1 class="pm-title" id="detailNama">Nama Produk</h1>
+	  
+          <p id="detailRingkasan" class="muted" style="margin-top:40px;">Deskripsi tentang produk — diisi dari form.</p>
+          <div class="badge" id="detailBadge">Single Origin • Arabica</div>
+	  
+          <div class="sub" id="detailSub">Subjudul / ringkasan singkat</div>
+          <div class="meta-row">
+            <div class="pill" id="pillAsal"></div>
+            <div class="pill" id="pillHarga"></div>
+            <div class="pill" id="pillJenis"></div>
+          </div>
+	
+        </div>
+      </header>
+
+      <div class="grid-prem" style="margin-top:20px;">
+        <main>
+          <section class="card-prem">
+
+
+            <h3 class="text-lg font-semibold">Profil Rasa & Visualisasi</h3>
+            <div style="display:flex;gap:12px;margin-top:8px;align-items:flex-start;flex-wrap:wrap;">
+              <div style="flex:1;min-width:260px;">
+                <p class="muted">Grafik radar menunjukkan intensitas profil rasa (Aroma, Acidity, Body, Sweetness, Aftertaste).</p>
+                <div class="charts" style="margin-top:12px;">
+                  <div class="chart-box">
+                    <canvas id="radarTaste" width="220" height="180"></canvas>
+                  </div>
+                  <div class="chart-box">
+                    <canvas id="barRoast" width="220" height="180"></canvas>
+                  </div>
+                </div>
+
+                <h4 style="margin-top:14px">Ciri-ciri Rasa</h4>
+                <div class="taste-list" id="tastePills"></div>
+              </div>
+
+              <div style="width:240px;">
+                <h4>Ringkasan Cepat</h4>
+                <div style="background:rgba(255,255,255,0.02);padding:10px;border-radius:8px;margin-top:8px;">
+                  <dl style="color:rgba(255,255,255,0.95);">
+                    <dt style="font-size:13px;color:rgba(255,255,255,0.75)">Nama</dt><dd id="asideNama">—</dd>
+                    <dt style="font-size:13px;color:rgba(255,255,255,0.75)">Asal</dt><dd id="asideAsal">—</dd>
+                    <dt style="font-size:13px;color:rgba(255,255,255,0.75)">Harga/kg</dt><dd id="asideHarga">—</dd>
+                    <dt style="font-size:13px;color:rgba(255,255,255,0.75)">Stok</dt><dd id="asideStok">—</dd>
+                  </dl>
+
+                  <div id="qrContainer" style="margin-top:12px;text-align:center;"></div>
+                </div>
+              </div>
+            </div>
+
+            <hr style="opacity:0.06;margin:14px 0">
+
+
+            <div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-top:12px">
+              <div style="flex:1;min-width:240px">
+                <h3>Spesifikasi</h3>
+                <dl id="dlQuality" style="color:rgba(255,255,255,0.9);">
+                  <dt style="font-size:13px;color:rgba(255,255,255,0.75)">Grade</dt><dd id="dlGrade">—</dd>
+                  <dt style="font-size:13px;color:rgba(255,255,255,0.75)">Kadar Air (Moisture)</dt><dd id="dlMoisture">—</dd>
+                  <dt style="font-size:13px;color:rgba(255,255,255,0.75)">Defects</dt><dd id="dlDefect">—</dd>
+                  <dt style="font-size:13px;color:rgba(255,255,255,0.75)">Ukuran (Screen Size)</dt><dd id="dlScreen">—</dd>
+                </dl>
+              </div>
+
+              <div style="flex:1;min-width:240px">
+                <h3>Detail Teknis</h3>
+                <dl style="color:rgba(255,255,255,0.9);">
+                  <dt style="font-size:13px;color:rgba(255,255,255,0.75)">Jenis</dt><dd id="dlJenis">—</dd>
+                  <dt style="font-size:13px;color:rgba(255,255,255,0.75)">Kategori</dt><dd id="dlKategori">—</dd>
+                  <dt style="font-size:13px;color:rgba(255,255,255,0.75)">Aroma</dt><dd id="dlAroma">—</dd>
+                  <dt style="font-size:13px;color:rgba(255,255,255,0.75)">Stok</dt><dd id="dlStok">—</dd>
+                </dl>
+              </div>
+            </div>
+
+          </section>
+        </main>
+
+        <aside>
+          <div class="card-prem">
+            <h3 class="text-lg font-semibold">Keyword & Tag</h3>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px" id="tagList"></div>
+          </div>
+
+          <div class="card-prem" style="margin-top:12px">
+            <h3 class="text-lg font-semibold">Kontak / Tautan</h3>
+            <div style="margin-top:8px;color:rgba(255,255,255,0.9)">
+              <p class="muted">Gunakan tombol share di halaman produk (public) untuk menyalin link.</p>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <!-- Application Logic -->
+  <script type="module" src="js/app.js"></script>
+
+</body>
+</html>
